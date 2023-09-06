@@ -10,6 +10,10 @@ The path of download:
    
    project_directory/eeg_dataset/wake_data/THINGS/raw_data
    
-3. DEED EEG data for the whole night: http://www.deeddataset.com/#/download
+3. DEED: http://www.deeddataset.com/#/download
    
-   project_directory/eeg_dataset/dream_data/DEED/raw_data
+   project_directory/eeg_dataset/dream_data/DEED/raw_data/
+
+1) EEG data for the whole night
+
+2) Metadata
