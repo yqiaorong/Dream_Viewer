@@ -8,7 +8,7 @@ The path of download:
 
 1. THINGS Raw EEG data: https://osf.io/crxs4/
    
-   project_directory/eeg_dataset/wake_data/THINGS/raw_data
+   project_directory/eeg_dataset/wake_data/THINGS/raw_data/
    
 3. DEED: http://www.deeddataset.com/#/download
    
