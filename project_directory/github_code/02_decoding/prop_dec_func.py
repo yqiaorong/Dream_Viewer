@@ -99,6 +99,7 @@ def LearnCurve(X,y,args):
 
 def prop_dec(X, y, Xtest, ytest, args):
     from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import permutation_test_score
     from tqdm import tqdm
     import matplotlib.pyplot as plt
     import numpy as np
@@ -113,26 +114,46 @@ def prop_dec(X, y, Xtest, ytest, args):
     Ytest_pred = np.empty((num_conds, num_times))
     binary_results = np.empty((num_times))
     accuracy = np.empty((num_conds, num_times))
+    scores, perm_means, perm_stds = np.empty((num_times)), np.empty((num_times)), np.empty((num_times))
+    perm_scores = np.empty((num_times, args.n_perm))
     
-    # Decoding
+    ### Decoding and permutations ###
     for T_idx in tqdm(range(num_times), desc=f'{args.obj_prop} decoding training'):
         logreg = LogisticRegression().fit(X[:,:,T_idx], y)
+        # decoding accuracy
         for c in range(num_conds):
             Ytest_pred_prob[c][T_idx] = logreg.predict_proba(Xtest[c,:,T_idx].reshape(1,-1))[0][1]
             Ytest_pred[c][T_idx] = logreg.predict(Xtest[c,:,T_idx].reshape(1,-1))
         binary_results[T_idx] = sum(Ytest_pred[:,T_idx] == ytest) / len(ytest)
         accuracy[:,T_idx] =  (Ytest_pred[:,T_idx] == ytest).astype(int)
+        # permutation accuracies
+        scores[T_idx], perm_scores[T_idx], _ = permutation_test_score(logreg, 
+                                                          Xtest[:,:,T_idx], Ytest, scoring="accuracy", 
+                                                          cv=5, n_permutations=args.n_perm, n_jobs=-1)
+        perm_means[T_idx] = np.mean(perm_scores[T_idx])
+        perm_stds[T_idx] = np.std(perm_scores[T_idx])
         del logreg
 
-    # Plot the decoding results
-    plt.figure(figsize=(8, 6))
-    plt.imshow(accuracy, cmap='viridis',extent=[-.2, .8, 0, 8000], 
+    ### Plot the results ###
+    fig, ax = plt.subplots(2)
+    # Decoding result plot
+    ax[0].set_title(f'{args.obj_prop} 2D decoding accuracy')
+    ax[0].imshow(accuracy, cmap='viridis',extent=[-.2, .8, 0, 8000], 
             origin='lower', aspect='auto')
     cbar = plt.colorbar()
     cbar.set_label('Values')
-    plt.xlabel('time(s)')
-    plt.ylabel('images')
-    plt.title(f'{args.obj_prop} 2D decoding accuracy')
-    plt.show()
+    ax[0].set(xlabel = 'Time (s)', ylabel = "Images")
+    # Permutation plot
+    ax[1].set_title(f"Permutation scores vs Predicted scores of {args.obj_prop}")
+    ax[1].set(xlabel = 'Time (s)', ylabel = "Accuracy")
+    ax[1].plot([0, 0], [.45, .6], 'k--')
+    ax[1].plot(times, perm_means, label = "Permutation scores", color="darkorange")
+    ax[1].fill_between(times, perm_means - perm_stds, perm_means + perm_stds, alpha=0.2, color="darkorange")
+    ax[1].plot(times, scores, label = "Predicted scores", color="navy")
+    ax[1].legend(loc = 'best')
+    fig.tight_layout()
+    
+    max_time_idx = np.argmax(scores)
+    print(f'The time with greatest score difference: {round(times[max_time_idx],2)}s')
 
-    return plt
+    return fig

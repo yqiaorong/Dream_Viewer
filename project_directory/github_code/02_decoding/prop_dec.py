@@ -11,6 +11,7 @@ parser.add_argument('--img_type', default='training', type=str)
 parser.add_argument('--obj_prop', default='pleasant_mean', type=str)
 parser.add_argument('--electrodes', default='occipital', type=str)
 parser.add_argument('--rand_t_idx', default=40, type=int)
+parser.add_argument('--n_perm', default=100, type=int)
 args = parser.parse_args()
 
 print('>>> THINGS EEG decoding <<<')
