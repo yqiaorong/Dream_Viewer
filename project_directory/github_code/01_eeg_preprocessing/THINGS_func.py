@@ -245,7 +245,7 @@ def save_prepr(args, whitened_test, whitened_train, img_conditions_train,
 
     # Saving directories
     save_dir = os.path.join(args.project_dir, 'eeg_dataset','wake_data','THINGS',
-        'preprocessed_data', 'sub-'+format(args.sub,'02'))
+        'preprocessed_data', args.electrodes, 'sub-'+format(args.sub,'02'))
     file_name_test = 'preprocessed_eeg_test.npy'
     file_name_train = 'preprocessed_eeg_training.npy'
     # Create the directory if not existing and save the data
