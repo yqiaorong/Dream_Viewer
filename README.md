@@ -16,4 +16,8 @@ The path of download:
 
 * EEG data for the whole night
 
+<<<<<<< HEAD
 * Metadata
+=======
+* Metadata
+>>>>>>> b4b6207978c7d90a5c7ec9457f0ccd1cdbf581d0
