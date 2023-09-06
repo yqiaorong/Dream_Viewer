@@ -1,6 +1,6 @@
 # Running the analysis-preprocessing:
 
-run_all_scripts.py (This preprocesses all datasets, including THINGS， DEED)
+run_all_scripts.py (This preprocesses all datasets, including DEED, THINGS)
 
 DEED.py (This preprocesses one specific subject of DEED.)
 
