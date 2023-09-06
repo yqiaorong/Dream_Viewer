@@ -1,8 +1,9 @@
 # Dream_Decoding
 Using waking EEG dataset to build decoder with decodes EEG dream data. 
 
-## Dataset
+## Datasets
 The open datasets currently used are THINGS EEG dataset and DEED EEG dataset. 
+
 The path of download:
 
 1. THINGS Raw EEG data: https://osf.io/crxs4/
