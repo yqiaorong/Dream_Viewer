@@ -10,6 +10,7 @@ parser.add_argument('--project_dir', default='../project_directory', type=str)
 parser.add_argument('--img_type', default='training', type=str)
 parser.add_argument('--obj_prop', default='pleasant_mean', type=str)
 parser.add_argument('--electrodes', default='occipital', type=str)
+parser.add_argument('--rand_t_idx', default=40, type=int)
 args = parser.parse_args()
 
 print('>>> THINGS EEG decoding <<<')
@@ -21,9 +22,9 @@ for key, val in vars(args).items():
 # THINGS EEG training data
 #####################################################################
 
-X_1, Y_1, _, _ = feature_select(args)
-X_2, Y_2, _, _ = feature_select(args)
-X_3, Y_3, _, _ = feature_select(args)
+X_1, Y_1, _, _ = feature_select(args,1,'training')
+X_2, Y_2, _, _ = feature_select(args,2,'training')
+X_3, Y_3, _, _ = feature_select(args,3,'training')
 
 X = np.concatenate((X_1, X_2, X_3), axis=0)
 Y = np.concatenate((Y_1, Y_2, Y_3), axis=0)
@@ -45,7 +46,7 @@ LearnCurve(X_shuffled, Y_shuffled, args)
 # THINGS EEG test data
 #####################################################################
 
-Xtest, Ytest, channels, times = feature_select(args)
+Xtest, Ytest, channels, times = feature_select(args,4,'test')
 print('The shape od X_test:', Xtest.shape)
 print('The shape od y_test:', Ytest.shape)
 

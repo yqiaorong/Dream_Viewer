@@ -6,9 +6,11 @@ The open datasets currently used are THINGS EEG dataset and DEED EEG dataset.
 
 The path of download:
 
-1. THINGS Raw EEG data: https://osf.io/crxs4/
+1. THINGS: https://osf.io/crxs4/
    
    project_directory/eeg_dataset/wake_data/THINGS/raw_data/
+
+* Raw EEG data
    
 3. DEED: http://www.deeddataset.com/#/download
    
