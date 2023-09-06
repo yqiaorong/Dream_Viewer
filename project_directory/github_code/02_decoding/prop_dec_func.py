@@ -80,6 +80,7 @@ def feature_select(args, sub, img_type):
 def LearnCurve(X,y,args):
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import LearningCurveDisplay
+    import matplotlib.pyplot as plt
     import numpy as np
 
     logreg = LogisticRegression().fit(X[:,:,args.rand_t_idx], y)
@@ -94,7 +95,8 @@ def LearnCurve(X,y,args):
     "line_kw": {"marker": "o"},
     "std_display_style": "fill_between",
     "score_name": "Accuracy",}
-    return LearningCurveDisplay.from_estimator(logreg, **common_params)
+    LearningCurveDisplay.from_estimator(logreg, **common_params)
+    plt.show()
 
 
 def prop_dec(X, y, Xtest, ytest, args, times):
@@ -152,8 +154,7 @@ def prop_dec(X, y, Xtest, ytest, args, times):
     ax[1].plot(times, scores, label = "Predicted scores", color="navy")
     ax[1].legend(loc = 'best')
     fig.tight_layout()
+    plt.show()
 
     max_time_idx = np.argmax(scores)
     print(f'The time with greatest score difference: {round(times[max_time_idx],2)}s')
-
-    return fig
