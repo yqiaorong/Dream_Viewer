@@ -54,9 +54,13 @@ def epoching(args, data_part, seed):
 
         ### Get events, drop unused channels and reject target trials ###
         events = mne.find_events(raw, stim_channel='stim')
-        # Select only DEED channels
-        chan_idx = np.asarray(mne.pick_channels_regexp(raw.info['ch_names'],
-            'F3|F4|FT7|FT8|T7|T8'))
+        # Select channels
+        if args.electrodes == 'frontal':
+            chan_idx = np.asarray(mne.pick_channels_regexp(raw.info['ch_names'],
+                'F3|F4|FT7|FT8|T7|T8'))
+        elif args.electrodes == 'occipital':
+            chan_idx = np.asarray(mne.pick_channels_regexp(raw.info['ch_names'],
+			'^O *|^P *'))
         new_chans = [raw.info['ch_names'][c] for c in chan_idx]
         raw.pick_channels(new_chans)
         # Reject the target trials (event 99999)
