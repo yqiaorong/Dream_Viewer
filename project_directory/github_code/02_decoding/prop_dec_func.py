@@ -1,5 +1,4 @@
 def feature_select(args):
-    import statistics as st
     import pandas as pd
     import numpy as np
     import os
@@ -43,7 +42,7 @@ def feature_select(args):
     ### Load THINGS EEG data ###
     THINGS_prepr_dir = os.path.join(THINGS_dir, 
                                     'preprocessed_data', args.electrodes, 'sub-'+format(sub,'02'),
-                                    'preprocessed_eeg_'+img_type+'.npy')
+                                    'preprocessed_eeg_'+args.img_type+'.npy')
     THINGS_eeg_data = np.load(THINGS_prepr_dir, allow_pickle=True).item()
      
     # Notations
@@ -82,4 +81,65 @@ def feature_select(args):
     X = np.concatenate((X_posi, X_nega))
     y = np.concatenate((y_posi, y_nega))
         
-    return X, y, posi_index, nega_index
+    return X, y, channels, times
+
+
+def LearnCurve(X,y,args):
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import LearningCurveDisplay
+    import numpy as np
+
+    logreg = LogisticRegression().fit(X[:,:,args.rand_t_idx], y)
+
+    common_params = {
+    "X": X[:,:,args.rand_t_idx],
+    "y": y,
+    "train_sizes": np.linspace(0.1, 1.0, 5),
+    "cv": 5,
+    "score_type": "both",
+    "n_jobs": -1,
+    "line_kw": {"marker": "o"},
+    "std_display_style": "fill_between",
+    "score_name": "Accuracy",}
+    LearningCurveDisplay.from_estimator(logreg, **common_params)
+
+
+def prop_dec(X, y, Xtest, ytest, args):
+    from sklearn.linear_model import LogisticRegression
+    from tqdm import tqdm
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Notations
+    num_conds =  Xtest.shape[0]
+    num_channels = Xtest.shape[1]
+    num_times = Xtest.shape[2]
+    
+    # Results
+    Ytest_pred_prob = np.empty((num_conds, num_times))
+    Ytest_pred = np.empty((num_conds, num_times))
+    binary_results = np.empty((num_times))
+    accuracy = np.empty((num_conds, num_times))
+    
+    # Decoding
+    for T_idx in tqdm(range(num_times), desc=f'{args.obj_prop} decoding training'):
+        logreg = LogisticRegression().fit(X[:,:,T_idx], y)
+        for c in range(num_conds):
+            Ytest_pred_prob[c][T_idx] = logreg.predict_proba(Xtest[c,:,T_idx].reshape(1,-1))[0][1]
+            Ytest_pred[c][T_idx] = logreg.predict(Xtest[c,:,T_idx].reshape(1,-1))
+        binary_results[T_idx] = sum(Ytest_pred[:,T_idx] == ytest) / len(ytest)
+        accuracy[:,T_idx] =  (Ytest_pred[:,T_idx] == ytest).astype(int)
+        del logreg
+
+    # Plot the decoding results
+    plt.figure(figsize=(8, 6))
+    plt.imshow(accuracy, cmap='viridis',extent=[-.2, .8, 0, 8000], 
+            origin='lower', aspect='auto')
+    cbar = plt.colorbar()
+    cbar.set_label('Values')
+    plt.xlabel('time(s)')
+    plt.ylabel('images')
+    plt.title(f'{args.obj_prop} 2D decoding accuracy')
+    plt.show()
+
+    return plt
