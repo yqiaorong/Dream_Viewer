@@ -47,7 +47,7 @@ LearnCurve(X_shuffled, Y_shuffled, args)
 # THINGS EEG test data
 #####################################################################
 
-Xtest, Ytest, channels, times = feature_select(args,4,'test')
+Xtest, Ytest, _, times = feature_select(args,4,'test')
 print('The shape od X_test:', Xtest.shape)
 print('The shape od y_test:', Ytest.shape)
 

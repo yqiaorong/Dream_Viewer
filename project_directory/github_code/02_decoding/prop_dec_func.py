@@ -40,8 +40,8 @@ def feature_select(args, sub, img_type):
      
     # Notations
     repetitions = THINGS_eeg_data['preprocessed_eeg_data'].shape[1]
-    channels = THINGS_eeg_data['preprocessed_eeg_data'].shape[2]
-    times = THINGS_eeg_data['preprocessed_eeg_data'].shape[3]
+    channels = THINGS_eeg_data['ch_names']
+    times = THINGS_eeg_data['times']
     
     ### Select features and targets ###
     X_posi, X_nega, y_posi, y_nega = [],[],[],[]
