@@ -61,4 +61,4 @@ Ytest_shuffled = Ytest[test_idx]
 #####################################################################
 # Decoding
 #####################################################################
-dec_result = prop_dec(X_shuffled, Y_shuffled, Xtest_shuffled, Ytest_shuffled, args)
+dec_result = prop_dec(X_shuffled, Y_shuffled, Xtest_shuffled, Ytest_shuffled, args, times)

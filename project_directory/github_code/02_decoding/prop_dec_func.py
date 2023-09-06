@@ -94,10 +94,10 @@ def LearnCurve(X,y,args):
     "line_kw": {"marker": "o"},
     "std_display_style": "fill_between",
     "score_name": "Accuracy",}
-    LearningCurveDisplay.from_estimator(logreg, **common_params)
+    return LearningCurveDisplay.from_estimator(logreg, **common_params)
 
 
-def prop_dec(X, y, Xtest, ytest, args):
+def prop_dec(X, y, Xtest, ytest, args, times):
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import permutation_test_score
     from tqdm import tqdm
@@ -128,7 +128,7 @@ def prop_dec(X, y, Xtest, ytest, args):
         accuracy[:,T_idx] =  (Ytest_pred[:,T_idx] == ytest).astype(int)
         # permutation accuracies
         scores[T_idx], perm_scores[T_idx], _ = permutation_test_score(logreg, 
-                                                          Xtest[:,:,T_idx], Ytest, scoring="accuracy", 
+                                                          Xtest[:,:,T_idx], ytest, scoring="accuracy", 
                                                           cv=5, n_permutations=args.n_perm, n_jobs=-1)
         perm_means[T_idx] = np.mean(perm_scores[T_idx])
         perm_stds[T_idx] = np.std(perm_scores[T_idx])
@@ -138,9 +138,9 @@ def prop_dec(X, y, Xtest, ytest, args):
     fig, ax = plt.subplots(2)
     # Decoding result plot
     ax[0].set_title(f'{args.obj_prop} 2D decoding accuracy')
-    ax[0].imshow(accuracy, cmap='viridis',extent=[-.2, .8, 0, 8000], 
+    im = ax[0].imshow(accuracy, cmap='viridis',extent=[-.2, .8, 0, 8000], 
             origin='lower', aspect='auto')
-    cbar = plt.colorbar()
+    cbar = plt.colorbar(im)
     cbar.set_label('Values')
     ax[0].set(xlabel = 'Time (s)', ylabel = "Images")
     # Permutation plot
@@ -152,7 +152,7 @@ def prop_dec(X, y, Xtest, ytest, args):
     ax[1].plot(times, scores, label = "Predicted scores", color="navy")
     ax[1].legend(loc = 'best')
     fig.tight_layout()
-    
+
     max_time_idx = np.argmax(scores)
     print(f'The time with greatest score difference: {round(times[max_time_idx],2)}s')
 
