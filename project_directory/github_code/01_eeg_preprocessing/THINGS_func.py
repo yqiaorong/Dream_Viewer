@@ -189,13 +189,8 @@ def mvnn(args, epoched_test, epoched_train):
         whitened_train.append(np.reshape((np.reshape(session_data[1], (-1,
             session_data[1].shape[2],session_data[1].shape[3])).swapaxes(1, 2)
                 @ sigma_inv).swapaxes(1, 2), session_data[1].shape))
-        
-        print("shape of whitened test:", session_data[0].shape)
-        print("shape of whitened train:", session_data[1].shape) 
 
     ### Output ###  
-    print('length of whitened test:',len(whitened_test))
-    print('length of whitened train:',len(whitened_train))
     return whitened_test, whitened_train
 
 
