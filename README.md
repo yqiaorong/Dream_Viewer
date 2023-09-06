@@ -14,6 +14,6 @@ The path of download:
    
    project_directory/eeg_dataset/dream_data/DEED/raw_data/
 
-1) EEG data for the whole night
+*EEG data for the whole night
 
-2) Metadata
+*Metadata
