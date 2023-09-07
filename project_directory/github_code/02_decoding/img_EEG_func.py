@@ -40,10 +40,14 @@ def img_EEG_match(args, concepts, sub, img_type):
     ### Select data with the right category ###
     idx = [int(c[:5])-1 for c in concepts]
     EEG_select = []
-    for i in idx:
-        EEG_select.append(data[i:i+10,:,:,:])
-    EEG_select = np.array(EEG_select)
-    data = EEG_select.reshape(EEG_select.shape[0]*EEG_select.shape[1], 
-                              EEG_select.shape[2], EEG_select.shape[3], EEG_select.shape[4])
+    if img_type == 'training':
+        for i in idx:
+            EEG_select.append(data[i*10:i*10+10,:,:,:])
+        EEG_select = np.array(EEG_select)
+        final_data = EEG_select.reshape(-1, *EEG_select.shape[2:])
+    elif img_type == 'test':
+        for i in idx:
+            EEG_select.append(data[i,:,:,:])
+        final_data = np.array(EEG_select)
 
-    return data
+    return final_data

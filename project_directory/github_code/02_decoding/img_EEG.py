@@ -33,6 +33,7 @@ for s in sub_list:
     training_data.append(data)
     del data
 training_data = np.array(training_data)
+training_data = training_data.reshape(-1, *training_data.shape[2:])
 print(training_data.shape)
 
 # Match the test data 
@@ -42,4 +43,5 @@ for s in sub_list:
     test_data.append(data)
     del data
 test_data = np.array(test_data)
+test_data = test_data.reshape(-1, *test_data.shape[2:])
 print(test_data.shape)
