@@ -67,18 +67,23 @@ def epoching(args, data_part, seed):
         idx_target = np.where(events[:,2] == 99999)[0]
         events = np.delete(events, idx_target, 0)
         
-        # Highpass lowpass filter 0.2Hz 200Hz / Bandpass filter: mne.filter()
-        h_freq, l_freq = 0.2, 200
-        raw = raw.copy().filter(h_freq, l_freq, fir_design='firwin', n_jobs=-1)
-        # Z score
-        raw_data = raw.get_data()
-        zscored_data = sc.stats.zscore(raw_data, axis=0)
-        raw_zscored = mne.io.RawArray(zscored_data, info=raw.info)
+        ##########################################################################
+        # # Highpass lowpass filter 0.2Hz 200Hz / Bandpass filter: mne.filter()
+        # h_freq, l_freq = 0.2, 200
+        # raw = raw.copy().filter(h_freq, l_freq, fir_design='firwin', n_jobs=-1)
+        # # Z score
+        # raw_data = raw.get_data()
+        # zscored_data = sc.stats.zscore(raw_data, axis=0)
+        # raw = mne.io.RawArray(zscored_data, info=raw.info)
+        ##########################################################################
 
         ### Epoching, baseline correction and resampling ###
-        epochs = mne.Epochs(raw_zscored, events, tmin=-.2, tmax=.8, preload=True)
-        inteval = (-0.2, 0)
-        epochs = epochs.apply_baseline(inteval)
+        epochs = mne.Epochs(raw, events, tmin=-.2, tmax=.8, baseline=(None,0), 
+                            preload=True)
+        ##########################################################################
+        # inteval = (-0.2, 0)
+        # epochs = epochs.apply_baseline(inteval)
+        ##########################################################################
         del raw
         # Resampling
         if args.sfreq < 1000:
