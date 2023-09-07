@@ -10,12 +10,13 @@ The path of download:
    
    * [Raw EEG data](https://osf.io/crxs4/): ../project_directory/eeg_dataset/wake_data/THINGS/raw_data/
 
-   * [Image set](https://osf.io/crxs4/): ../project_directory/eeg_dataset/wake_data/THINGS/image_set/
+   * [Image set](https://osf.io/y63gw/): ../project_directory/eeg_dataset/wake_data/THINGS/image_set/
 
 2. THINGS: 
 
-   * [things concepts](https://osf.io/jum2f/): https://osf.io/xtafs 
+   * [things concepts](https://osf.io/jum2f/): ../project_directory/eeg_dataset/wake_data/THINGS/
 
+   * [obejct properties ratings](https://osf.io/3kwn2): ../project_directory/eeg_dataset/wake_data/THINGS/
    
 3. [DEED](http://www.deeddataset.com/#/download):
 
