@@ -36,18 +36,34 @@ def img_EEG_match(args, concepts, sub, img_type):
     'preprocessed_data', 'occipital', 'sub-'+format(sub,'02'),'preprocessed_eeg_'+img_type+'.npy')
     data = np.load(THINGS_prepr_dir, allow_pickle=True).item()
     data = data['preprocessed_eeg_data']
-    
-    ### Select data with the right category ###
-    idx = [int(c[:5])-1 for c in concepts]
-    EEG_select = []
-    if img_type == 'training':
-        for i in idx:
-            EEG_select.append(data[i*10:i*10+10,:,:,:])
-        EEG_select = np.array(EEG_select)
-        final_data = EEG_select.reshape(-1, *EEG_select.shape[2:])
-    elif img_type == 'test':
-        for i in idx:
-            EEG_select.append(data[i,:,:,:])
-        final_data = np.array(EEG_select)
 
-    return final_data
+    ### Select data ###
+    idx = [int(c[:5])-1 for c in concepts]
+
+    if img_type == 'training':
+        
+        # Select data in the right category
+        final_data = np.empty((len(idx)*10, *data.shape[1:]))
+        for ii, i in enumerate(idx):
+            final_data[ii*10:ii*10+10,:,:,:] = data[i*10:i*10+10,:,:,:]
+
+        # Select data not in the right category
+        idx_all = list(range(int(data.shape[0]/10)))
+        idx_compli = [i for i in idx_all if i not in idx]
+        compli_data = np.empty((len(idx_compli)*10, *data.shape[1:]))
+        for ii, i in enumerate(idx_compli):
+            compli_data[ii*10:ii*10+10,:,:,:] = data[i*10:i*10+10,:,:,:]
+
+    elif img_type == 'test':
+
+        # Select data in the right category
+        final_data = np.empty((len(idx), *data.shape[1:]))
+        for ii, i in enumerate(idx):
+            final_data[ii,:,:,:] = data[i,:,:,:]
+
+        # Select data not in the right category
+        idx_compli = np.ones(data.shape[0], dtype=bool)
+        idx_compli[idx] = False
+        compli_data = data[idx_compli]
+
+    return final_data, compli_data
