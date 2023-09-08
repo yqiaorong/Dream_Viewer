@@ -10,10 +10,11 @@ import tqdm
 
 
 # The filepath of the categories file (should never change).
-import_path_categories = "../sourcedata/category53_longFormat.tsv"
+
+import_path_categories = "../project_directory/eeg_dataset/wake_data/THINGS/category53_longFormat.tsv"
 
 # The filepath of the dream reports file.
-import_path_reports = "../sourcedata/Reports.csv"
+import_path_reports = "../project_directory/eeg_dataset/dream_data/Zhang_Wamsley/Data/Reports.csv"
 
 # The column name of the dream reports (should be present in the dream reports file).
 reports_column = "Text of Report"
@@ -47,3 +48,11 @@ for report in tqdm.tqdm(reports):
 
 # Convert the results to a DataFrame.
 df = pd.Series(results).apply(pd.Series).fillna(0).astype(int)
+
+sum_row = df.sum()
+df = df.append(sum_row, ignore_index=True)
+top_values = df.iloc[-1].nlargest(6)
+top_columns = df.iloc[-1].nlargest(6).index.tolist()
+print(top_values, top_columns)
+print('')
+df['Row Sum'] = df.iloc[:, 1:].sum(axis=1)
