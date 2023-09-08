@@ -14,7 +14,7 @@ The path of download:
 
 2. THINGS: 
 
-   * [things concepts](https://osf.io/jum2f/): ../project_directory/eeg_dataset/wake_data/THINGS/
+   * [things concepts](https://osf.io/xtafs): ../project_directory/eeg_dataset/wake_data/THINGS/
 
    * [obejct properties ratings](https://osf.io/3kwn2): ../project_directory/eeg_dataset/wake_data/THINGS/
    
