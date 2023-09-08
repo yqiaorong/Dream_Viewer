@@ -155,30 +155,33 @@ def mvnn(args, epoched_test, epoched_train):
     whitened_train = []
     for s in range(args.n_ses):
         session_data = [epoched_test[s], epoched_train[s]]
-
         ### Compute the covariance matrices ###
         # Data partitions covariance matrix of shape:
-        # Data partitions × EEG channels × EEG channels
-        sigma_part = np.empty((len(session_data),session_data[0].shape[2],
-            session_data[0].shape[2]))
-        for p in range(sigma_part.shape[0]):
+        # Data partitions (2: test and train) × EEG channels × EEG channels
+        num_channels = session_data[0].shape[2]
+        sigma_part = np.empty((len(session_data), num_channels, num_channels))
+
+        for p in range(len(session_data)):
             # Image conditions covariance matrix of shape:
             # Image conditions × EEG channels × EEG channels
-            sigma_cond = np.empty((session_data[p].shape[0],
-                session_data[0].shape[2],session_data[0].shape[2]))
-            for i in tqdm(range(session_data[p].shape[0])):
+            img_cond = session_data[p].shape[0]
+            sigma_cond = np.empty((img_cond, num_channels, num_channels))
+
+            for i in tqdm(range(img_cond)):
                 cond_data = session_data[p][i]
                 # Compute covariace matrices at each time point, and then
                 # average across time points
+                num_times = cond_data.shape[2]
+                num_reps = cond_data.shape[0]
                 if args.mvnn_dim == "time":
                     sigma_cond[i] = np.mean([_cov(cond_data[:,:,t],
-                        shrinkage='auto') for t in range(cond_data.shape[2])],
+                        shrinkage='auto') for t in range(num_times)],
                         axis=0)
                 # Compute covariace matrices at each epoch (EEG repetition),
                 # and then average across epochs/repetitions
                 elif args.mvnn_dim == "epochs":
                     sigma_cond[i] = np.mean([_cov(np.transpose(cond_data[e]),
-                        shrinkage='auto') for e in range(cond_data.shape[0])],
+                        shrinkage='auto') for e in range(num_reps)],
                         axis=0)
             # Average the covariance matrices across image conditions
             sigma_part[p] = sigma_cond.mean(axis=0)

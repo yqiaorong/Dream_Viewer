@@ -54,7 +54,6 @@ def epoching(args):
                 date = str(f1.loc[index, 'Date'])
                 exp_onset = f1.loc[index, 'Start_recording'] 
                 break
-                print(date)
         measurement_time = pd.Timestamp(f'{date[0:4]}-{date[4:6]}-{date[6:8]} {exp_onset}')
         raw.set_meas_date(measurement_time.timestamp())
     
