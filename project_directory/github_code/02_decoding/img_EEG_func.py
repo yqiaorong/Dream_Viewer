@@ -4,12 +4,12 @@ def concepts_select(args, img_type):
 
     ### Load the image meta data with higher level categories ###
     THINGS_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS')
-    img_meta_dir = os.path.join(THINGS_dir, 'things_concepts.tsv')
+    img_meta_dir = os.path.join(THINGS_dir, 'category53_longFormat.tsv')
     img_meta_data = pd.read_csv(img_meta_dir, delimiter='\t')
     
     ### First select concepts under one category ###
     # Notice: I choose 'Top-down Category (WordNet)' as reference for categorization
-    df = img_meta_data[img_meta_data['Top-down Category (WordNet)'] == args.category]
+    df = img_meta_data[img_meta_data['category'] == args.category]
     init_select = []
     init_select.extend(df['uniqueID'].tolist())
     print(f'The total number of concepts under category {args.category}: ', len(init_select))
