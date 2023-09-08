@@ -26,6 +26,4 @@ The path of download:
 
    * Status identification: ../project_directory/eeg_dataset/dream_data/DEED/raw_data/
 
-4. REM_Turku: https://doi.org/10.6084/m9.figshare.23274596.v2
-
-   project_directory/eeg_dataset/dream_data/
+4. [Zhang & Wamsley 2019](https://doi.org/10.6084/m9.figshare.22226692): ../project_directory/eeg_dataset/dream_data/Zhang & Wamsley 2019
