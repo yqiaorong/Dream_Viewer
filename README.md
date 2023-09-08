@@ -16,7 +16,7 @@ The path of download:
 
    * [things concepts](https://osf.io/xtafs): ../project_directory/eeg_dataset/wake_data/THINGS/
 
-   * [obejct properties ratings](https://osf.io/3kwn2): ../project_directory/eeg_dataset/wake_data/THINGS/
+   * [object properties ratings](https://osf.io/3kwn2): ../project_directory/eeg_dataset/wake_data/THINGS/
    
 3. [DEED](http://www.deeddataset.com/#/download):
 
