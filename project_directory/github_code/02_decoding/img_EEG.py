@@ -107,9 +107,6 @@ del dream_data
 ##############################################################################
 # Short THINGS and dream channels
 ##############################################################################
-print(f'The shape of all THINGS EEG data under category {args.category}', category_data.shape)
-print(f'The shape of all THINGS EEG data outside category {args.category}', non_category_data.shape)
-print(f'The shape of dream EEG data ', sorted_dream_data.shape)
 
 correlation = np.empty((len(THINGS_ch), len(dream_t)-len(THINGS_t)))
 # Average the category data from THINGS
@@ -127,4 +124,12 @@ plt.xlabel('Time (s)')
 plt.ylabel('Pearson\'s $r$')
 plt.ylim(bottom=-1, top=1)
 plt.title('Correlation score')
+plt.show()
+
+# Plot the dream EEG 
+plt.figure()
+for c in range(len(dream_ch)):
+    plt.plot(dream_t[:80], sorted_dream_data[c,:80], alpha=0.2)
+plt.xlabel('Time (s)')
+plt.title('dream')
 plt.show()
