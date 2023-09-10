@@ -1,5 +1,5 @@
 # Dream_Decoding
-Using waking EEG dataset to build decoder with decodes EEG dream data. 
+Using waking EEG dataset to decodes dream content. 
 
 ## Datasets
 The open datasets currently used are THINGS EEG dataset and DEED EEG dataset. 
