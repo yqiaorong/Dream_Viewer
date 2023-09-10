@@ -27,43 +27,65 @@ def concepts_select(args, img_type):
 
     return final_select
 
-def img_EEG_match(args, concepts, sub, img_type):
+def img_EEG_match(args, train_concepts, test_concepts, sub, subset=False):
     import os
+    import random
     import numpy as np
     
-    ### Load THINGS prepr data ###
-    THINGS_prepr_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS',
-    'preprocessed_data', 'occipital', 'sub-'+format(sub,'02'),'preprocessed_eeg_'+img_type+'.npy')
-    data = np.load(THINGS_prepr_dir, allow_pickle=True).item()
-    data = data['preprocessed_eeg_data']
+    THINGS_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS',
+    'preprocessed_data', 'occipital', 'sub-'+format(sub,'02'))
 
-    ### Select data ###
-    idx = [int(c[:5])-1 for c in concepts]
+    ### Load THINGS prepr training data ###
+    THINGS_train_dir = os.path.join(THINGS_dir, 'preprocessed_eeg_training.npy')
+    train_data = np.load(THINGS_train_dir, allow_pickle=True).item()
+    # Load channels and times
+    channels = train_data['ch_names']
+    times = train_data['times']
+    train_data = train_data['preprocessed_eeg_data']
+    
+    ### Select training data ###
+    # The training idx under the category
+    train_idx = [int(c[:5])-1 for c in train_concepts]
 
-    if img_type == 'training':
-        
-        # Select data in the right category
-        final_data = np.empty((len(idx)*10, *data.shape[1:]))
-        for ii, i in enumerate(idx):
-            final_data[ii*10:ii*10+10,:,:,:] = data[i*10:i*10+10,:,:,:]
+    # Select data in the right category
+    train = np.empty((len(train_idx)*10, *train_data.shape[1:]))
+    for ii, i in enumerate(train_idx):
+        train[ii*10:ii*10+10,:,:,:] = train_data[i*10:i*10+10,:,:,:]
+    
+    # Select data not in the right category
+    train_idx_all = list(range(int(train_data.shape[0]/10)))
+    train_idx_compli = [i for i in train_idx_all if i not in train_idx]
+    if subset == True:
+        train_idx_compli = random.sample(train_idx_compli, len(train_idx))
+    else:
+        pass
+    train_compli = np.empty((len(train_idx_compli)*10, *train_data.shape[1:]))
+    for ii, i in enumerate(train_idx_compli):
+        train_compli[ii*10:ii*10+10,:,:,:] = train_data[i*10:i*10+10,:,:,:]
 
-        # Select data not in the right category
-        idx_all = list(range(int(data.shape[0]/10)))
-        idx_compli = [i for i in idx_all if i not in idx]
-        compli_data = np.empty((len(idx_compli)*10, *data.shape[1:]))
-        for ii, i in enumerate(idx_compli):
-            compli_data[ii*10:ii*10+10,:,:,:] = data[i*10:i*10+10,:,:,:]
+    ### Load THINGS prepr test data ###
+    THINGS_test_dir = os.path.join(THINGS_dir, 'preprocessed_eeg_test.npy')
+    test_data = np.load(THINGS_test_dir, allow_pickle=True).item()
+    test_data = test_data['preprocessed_eeg_data']
 
-    elif img_type == 'test':
+    ### Select test data ###
+    # The test idx under the category
+    test_idx = [int(c[:5])-1 for c in test_concepts]
 
-        # Select data in the right category
-        final_data = np.empty((len(idx), *data.shape[1:]))
-        for ii, i in enumerate(idx):
-            final_data[ii,:,:,:] = data[i,:,:,:]
+    # Select data in the right category
+    test = np.empty((len(test_idx), *test_data.shape[1:]))
+    for ii, i in enumerate(test_idx):
+        test[ii,:,:,:] = test_data[i,:,:,:]
 
-        # Select data not in the right category
-        idx_compli = np.ones(data.shape[0], dtype=bool)
-        idx_compli[idx] = False
-        compli_data = data[idx_compli]
+    # Select data not in the right category
+    test_idx_all = list(range(int(test_data.shape[0])))
+    test_idx_compli = [i for i in test_idx_all if i not in test_idx]
+    if subset == True:
+        test_idx_compli = random.sample(test_idx_compli, len(test_idx))
+    else:
+        pass
+    test_compli = np.empty((len(test_idx_compli), *test_data.shape[1:]))
+    for ii, i in enumerate(test_idx_compli):
+        test_compli[ii,:,:,:] = test_data[i,:,:,:]
 
-    return final_data, compli_data
+    return train, train_compli, test, test_compli, channels, times
