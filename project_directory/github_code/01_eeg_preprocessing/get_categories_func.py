@@ -63,13 +63,12 @@ def category_raw(args):
     IDs = df_reports.loc[report_idx, 'Case ID'].tolist()
     IDs = [f"{'0' + num if len(num) == 2 else num}_{text}" for num, text in [ID.split('_') for ID in IDs]]
     print(f'The number of dreams under category {args.category}: {len(IDs)}')
-
+    
     return IDs
 
 def epoching(args, raw):
     import mne
     import numpy as np
-    from sklearn.utils import shuffle
 
     ### Drop unused channels ###
     chan_idx = np.asarray(mne.pick_channels_regexp(raw.info['ch_names'],

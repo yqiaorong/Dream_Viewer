@@ -8,7 +8,6 @@ def concepts_select(args, img_type):
     img_meta_data = pd.read_csv(img_meta_dir, delimiter='\t')
     
     ### First select concepts under one category ###
-    # Notice: I choose 'Top-down Category (WordNet)' as reference for categorization
     df = img_meta_data[img_meta_data['category'] == args.category]
     init_select = []
     init_select.extend(df['uniqueID'].tolist())
