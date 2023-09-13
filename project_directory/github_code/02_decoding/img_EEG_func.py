@@ -201,24 +201,28 @@ def correlation_and_plot(args, dream_subj, dream_t, sorted_dream_EEG_data, sorte
     ax1 = plt.subplot(gs[0, 0])
     ax1.plot(dream_t[:2000], ztrans_corr[:2000], color='skyblue')
     ax1.set_title('Temporal Correlation')
+    ax1.set_ylim(-1,1)
     ax1.set_ylabel('Correlation Score')
 
     # Subplot 2: Histogram of correlation scores for the first 20 time points
     ax2 = plt.subplot(gs[0, 1])
     ax2.hist(ztrans_corr[:2000], bins=10, color='skyblue', edgecolor='black')
     ax2.set_title('Histogram of Correlation Scores')
+    ax2.set_xlim(-1.5,1.5)
     ax2.set_ylabel('Frequency')
 
     # Subplot 3: Temporal correlation scores for the last 20 time points
     ax3 = plt.subplot(gs[1, 0])
     ax3.plot(dream_t[-2000:], ztrans_corr[-2000:], color='salmon')
     ax3.set_xlabel('Time Points')
+    ax3.set_ylim(-1,1)
     ax3.set_ylabel('Correlation Score')
 
     # Subplot 4: Histogram of correlation scores for the last 20 time points
     ax4 = plt.subplot(gs[1, 1])
     ax4.hist(ztrans_corr[-2000:], bins=10, color='salmon', edgecolor='black')
     ax4.set_xlabel('Correlation Score')
+    ax4.set_xlim(-1.5,1.5)
     ax4.set_ylabel('Frequency')
 
     plt.tight_layout()
