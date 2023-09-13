@@ -2,11 +2,9 @@ import os
 import argparse
 import numpy as np
 from tqdm import tqdm
-from matplotlib import pyplot as plt
-from scipy.stats import pearsonr as corr
 
-from img_EEG_func import concepts_select
-from img_EEG_func import img_EEG_match
+from img_EEG_func import concepts_select, img_EEG_match
+from img_EEG_func import load_dream_EEG, sort_THINGS, correlation_and_plot
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--project_dir', default='../project_directory', type=str)
@@ -65,83 +63,23 @@ test_compli = test_compli.reshape(-2, *test_compli.shape[3:])
 category_data = np.concatenate((train, test), axis=0)
 non_category_data = np.concatenate((train_compli, test_compli), axis=0)
 
+# Drop extra THINGS channel and crop THINGS EEG data
+sorted_THINGS_EEG_data, THINGS_t = sort_THINGS(category_data, THINGS_t)
+
 ##############################################################################
-# Sort THINGS and dream channels
+# Load dream EEG data
 ##############################################################################
 
-# Load dream data directory
+# Input the category that you want to analyse
+input_category = str(input(f"Please enter the category of dream that you want to analyse [{args.category}/NA]: "))
+# Load the corresponding dream EEG data directory
 dream_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-                         'Zhang_Wamsley', 'preprocessed_data', args.category)
-# The list of filenames in the directory
-dream_subs = os.listdir(dream_dir)
-print(f'The number of dreams under the category {args.category}: {len(dream_subs)}')
-# Load the dream data
-dream_sub = int(input("Please enter the idx of dream: "))
-dream_data = np.load(os.path.join(dream_dir, dream_subs[dream_sub]), allow_pickle=True).item()
-# Load the dream channel names
-dream_ch = dream_data['ch_names']
-# Load the dream times
-dream_t = dream_data['times']
-# Capitalize and shorten dream channel names
-dream_ch = [ch[:-4].upper() for ch in dream_ch]
-# Extract the index of the channel in THINGS which presents in THINGS but not in dream
-redundant_ch = next(i for i, ch in enumerate(THINGS_ch) if ch not in dream_ch)
-# Drop the redundant channel from THINGS channels 
-THINGS_ch.pop(redundant_ch) 
-# Sort the dream channel indices
-dream_idx = [THINGS_ch.index(ch) for ch in dream_ch]
-# Drop the THINGS EEG data of the redundant channels
-category_data = np.delete(category_data, redundant_ch, axis=1)
-non_category_data = np.delete(non_category_data, redundant_ch, axis=1)
-# Drop the THINGS EEG times before t=0s
-THINGS_t = THINGS_t[20:]
-# Drop the THINGS EEG data before t=0s
-category_data = category_data[:,:,20:]
-non_category_data = non_category_data[:,:,20:]
-# Load the dream EEG data 
-dream_data = dream_data['preprocessed_eeg_data']
-# Sort dream EEG data according to the dream channel indices
-sorted_dream_data = np.empty((dream_data.shape))
-for ii, i in enumerate(dream_idx):
-    sorted_dream_data[ii] = dream_data[i] 
-del dream_data
+                        'Zhang_Wamsley', 'preprocessed_data', input_category)
+# The list of filenames in that directory
+dream_subjs = os.listdir(dream_dir)
+print(f'The number of dreams under the category {input_category}: {len(dream_subjs)}')
 
-##############################################################################
-# Correlations
-##############################################################################
-
-correlation = np.empty((len(THINGS_ch), len(dream_t)-len(THINGS_t)))
-# Average the category data from THINGS
-mean_category_data = np.mean(category_data, axis=0)
-# Iterate over times 
-for t in tqdm(range(len(dream_t)-len(THINGS_t))):
-    # Iterate over channels
-    for c in range(len(THINGS_ch)):
-        correlation[c,t] = corr(mean_category_data[c,:], sorted_dream_data[c,t:t+len(THINGS_t)])[0]
-
-# Plot the mean result
-plt.figure()
-plt.plot(dream_t[:-80], np.mean(correlation, axis=0))
-plt.xlabel('Time (s)')
-plt.ylabel('Pearson\'s $r$')
-plt.ylim(bottom=-1, top=1)
-plt.title('Correlation score')
-plt.show()
-
-# Plot the result
-plt.figure(figsize=(8, 6))
-plt.imshow(correlation, cmap='viridis', extent=[0, len(dream_t)-len(THINGS_t), 0, len(dream_ch)], origin='lower', aspect='auto')
-cbar = plt.colorbar()
-cbar.set_label('Values')
-plt.xlabel('Time(s)')
-plt.ylabel('Channels')
-plt.title('Correlation score')
-plt.show()
-
-# Plot the dream EEG 
-plt.figure()
-for c in range(len(dream_ch)):
-    plt.plot(dream_t[:80], sorted_dream_data[c,:80], alpha=0.2)
-plt.xlabel('Time (s)')
-plt.title('dream')
-plt.show()
+# Iterate over dreams under the same category
+for subj in tqdm(dream_subjs):
+    dream_EEG_data, dream_ch, dream_t = load_dream_EEG(dream_dir, subj)
+    correlation_and_plot(args, subj, dream_t, dream_EEG_data, sorted_THINGS_EEG_data)

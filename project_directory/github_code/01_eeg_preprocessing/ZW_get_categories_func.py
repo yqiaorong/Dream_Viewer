@@ -6,10 +6,8 @@ def category_raw(args):
     import os
     import spacy
     import tqdm
-    import mne
     import pandas as pd
     from collections import Counter
-    from pathlib import Path
 
     # The filepath of the categories file (should never change).
     THINGS_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS')
@@ -67,25 +65,66 @@ def category_raw(args):
     return IDs
 
 def epoching(args, raw):
+    import os
     import mne
     import numpy as np
 
-    ### Drop unused channels ###
+    ### Load the sample THINGS data ###
+    # Load the sample THINGS prepr test dir 
+    THINGS_prepr_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS',
+    'preprocessed_data')
+    # Load sample THINGS prepr test data 
+    THINGS_sample_data = np.load(os.path.join(THINGS_prepr_dir, 'occipital', 'sub-01', 
+                                              'preprocessed_eeg_test.npy'), allow_pickle=True).item()
+    # Load THINGS channels 
+    THINGS_ch = THINGS_sample_data['ch_names']
+    del THINGS_sample_data
+    # Capitalize THINGS channel names
+    THINGS_ch = [ch.upper() for ch in THINGS_ch]
+
+    ### Preprocess the dream data ###
     chan_idx = np.asarray(mne.pick_channels_regexp(raw.info['ch_names'],
         '^O *|^P *'))
     new_chans = [raw.info['ch_names'][c] for c in chan_idx]
     raw.pick(new_chans)
-
-    ### Baseline correction and resampling ###
-    # Resampling
+    # Resampling 
     raw = raw.resample(args.sfreq)
-
-    ch_names = raw.info['ch_names']
+    # Get channel names
+    dream_ch = raw.info['ch_names']
+    # Capitalize and shorten dream channel names
+    dream_ch = [ch[:-4].upper() for ch in dream_ch]
+    # Extract the index of the channel in THINGS EEG which presents in THINGS EEG but not in dream
+    extra_dream_ch_idx = [i for i, ch in enumerate(dream_ch) if ch not in THINGS_ch]
+    # Get times
     times = raw.times
-    epoched_data = raw.get_data()    
+    # Get epoched data
+    epoched_data = raw.get_data()  
+    # Creat sub epoched data by removing extra dream EEG channels 
+    if len(extra_dream_ch_idx) != 0:
+        sub_epoched_data = np.delete(epoched_data, extra_dream_ch_idx, axis=0)
+    else:
+        sub_epoched_data = epoched_data
+    del epoched_data
 
+    ### Sort the dream EEG data ###
+    # Extract the index of the channel in THINGS EEG which presents in THINGS EEG but not in dream
+    extra_THINGS_ch_idx = next(i for i, ch in enumerate(THINGS_ch) if ch not in dream_ch)
+    print(f'The redundant EEG channel idx in THINGS: {extra_THINGS_ch_idx}')
+    # Drop the redundant channel from THINGS channels 
+    THINGS_ch.pop(extra_THINGS_ch_idx) 
+    # Sort the dream channel indices
+    dream_idx = [dream_ch.index(ch) for ch in THINGS_ch]
+    # Sort dream EEG data according to the dream channel indices
+    sorted_epoched_data = np.empty((sub_epoched_data.shape))
+    # Sort dream EEG channels according to the dream channel indices
+    ch_names = []
+    for ii, i in enumerate(dream_idx):
+        sorted_epoched_data[ii] = sub_epoched_data[i] 
+        ch_names.append(dream_ch[i])
+    del sub_epoched_data
+    
     ### Output ###
-    return epoched_data, ch_names, times
+    return sorted_epoched_data, ch_names, times
 
 def mvnn(args, epoched_data):
     import numpy as np

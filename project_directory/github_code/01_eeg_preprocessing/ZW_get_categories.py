@@ -6,7 +6,7 @@ import argparse
 import mne
 import os 
 
-from get_categories_func import category_raw, epoching, mvnn, save_prepr
+from ZW_get_categories_func import category_raw, epoching, mvnn, save_prepr
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--project_dir', default='../project_directory', type=str)
