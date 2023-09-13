@@ -108,7 +108,6 @@ def epoching(args):
     
     return epoched_data, ch_names, times
 
-
 def mvnn(args, epoched_data):
     """
     Compute the covariance matrices of the EEG data (calculated for each
@@ -167,7 +166,6 @@ def mvnn(args, epoched_data):
 
     ### Output ###
     return whitened_data
-
 
 def save_prepr(args, whitened_data, ch_names, times):
     """The preprocessed data  of each dream has format:

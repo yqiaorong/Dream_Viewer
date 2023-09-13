@@ -154,7 +154,6 @@ def sort_THINGS(THINGS_EEG_data, THINGS_t):
     del THINGS_EEG_data
     return sorted_THINGS_EEG_data, THINGS_t
 
-
 def correlation_and_plot(args, dream_subj, dream_t, sorted_dream_EEG_data, sorted_THINGS_EEG_data):
     """
     Parameters

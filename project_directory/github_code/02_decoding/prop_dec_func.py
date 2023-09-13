@@ -76,7 +76,6 @@ def feature_select(args, sub, img_type):
         
     return X, y, channels, times
 
-
 def LearnCurve(X,y,args):
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import LearningCurveDisplay
@@ -98,7 +97,6 @@ def LearnCurve(X,y,args):
     LearningCurveDisplay.from_estimator(logreg, **common_params)
     plt.show()
 
-
 def prop_dec(X, y, Xtest, ytest, args, times):
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import permutation_test_score
@@ -108,7 +106,6 @@ def prop_dec(X, y, Xtest, ytest, args, times):
 
     # Notations
     num_conds =  Xtest.shape[0]
-    num_channels = Xtest.shape[1]
     num_times = Xtest.shape[2]
     
     # Results
