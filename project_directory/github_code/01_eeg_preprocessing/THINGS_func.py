@@ -119,7 +119,6 @@ def epoching(args, data_part, seed):
     ### Output ###
     return epoched_data, img_conditions, ch_names, times
 
-
 def mvnn(args, epoched_test, epoched_train):
     """Compute the covariance matrices of the EEG data (calculated for each
     time-point or epoch/repetitions of each image condition), and then average
@@ -200,7 +199,6 @@ def mvnn(args, epoched_test, epoched_train):
 
     ### Output ###  
     return whitened_test, whitened_train
-
 
 def save_prepr(args, whitened_test, whitened_train, img_conditions_train,
     ch_names, times, seed):
