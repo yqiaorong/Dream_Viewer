@@ -27,7 +27,8 @@ def epoching(args):
     ### Load the THINGS1 subject metadata ### 
     # Load the THINGS1 subject directory
     TH1_dir = os.path.join(args.project_dir,'eeg_dataset','wake_data',
-                           'THINGS_EEG1','raw_data','sub-'+format(args.subj,'02'))
+                           'THINGS_EEG1','raw_data','sub-'+format(args.subj,'02'),
+                           'eeg')
     # Load the THINGS1 subject metadata
     dftsv = pd.read_csv(os.path.join(TH1_dir, 'sub-'+format(args.subj,'02')+
                                      '_task-rsvp_events.tsv'), delimiter='\t')
