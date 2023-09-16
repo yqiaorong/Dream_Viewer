@@ -17,7 +17,6 @@ sfreq : int
 mvnn_dim : str
 	Whether to compute the MVNN covariace matrices for each time point
 	('time') or for each epoch ('epochs').
-
 """
 
 import argparse

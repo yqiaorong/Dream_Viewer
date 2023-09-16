@@ -1,12 +1,14 @@
-"""Preprocess the raw EEG data: channel selection, re-reference, bandpass 
-filter, epoching, baseline correction, frequency downsampling, multivariate 
-noise normalization (MVNN),sorting of the data image conditions and reshaping 
-the data to: Image conditions × EEG repetitions × EEG channels × EEG time points.
+"""Preprocess the raw EEG data: channel selection, re-reference, bandpass filter, 
+epoching, baseline correction, frequency downsampling, multivariate noise 
+normalization (MVNN),sorting of the data image conditions and reshaping the data 
+to: Image conditions × EEG repetitions × EEG channels × EEG time points.
 Then, the data of both test and training EEG partitions is saved.
 
 Parameters
 ----------
-sub : int
+project_dir : str
+	Directory of the project folder.
+subj : int
 	Used subject.
 n_ses : int
 	Number of EEG sessions.
@@ -15,9 +17,6 @@ sfreq : int
 mvnn_dim : str
 	Whether to compute the MVNN covariace matrices for each time point
 	('time') or for each epoch/repetition ('epochs').
-project_dir : str
-	Directory of the project folder.
-
 """
 
 import argparse
