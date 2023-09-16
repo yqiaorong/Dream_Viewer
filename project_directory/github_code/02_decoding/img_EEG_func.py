@@ -1,4 +1,4 @@
-def concepts_select(args, img_type):
+def THINGS_concepts_select(args, category, img_type):
     import os
     import pandas as pd
 
@@ -8,10 +8,10 @@ def concepts_select(args, img_type):
     img_meta_data = pd.read_csv(img_meta_dir, delimiter='\t')
     
     ### First select concepts under one category ###
-    df = img_meta_data[img_meta_data['category'] == args.category]
+    df = img_meta_data[img_meta_data['category'] == category]
     init_select = []
     init_select.extend(df['uniqueID'].tolist())
-    print(f'The total number of concepts under category {args.category}: ', len(init_select))
+    print(f'The total number of THINGS concepts under category {category}: ', len(init_select))
 
     ### Secondly select concepts only appeared in training/test set ###
     img_dir  = os.path.join(THINGS_dir, 'image_set', img_type+'_images') 
@@ -22,7 +22,7 @@ def concepts_select(args, img_type):
         for c in concepts:
             if i_s == c[6:]:
                 final_select.append(c)
-    print(f'The number of concepts under category {args.category} in {img_type} set: ', len(final_select))
+    print(f'The number of THINGS concepts under category {category} in {img_type} set: ', len(final_select))
 
     return final_select
 
@@ -154,12 +154,16 @@ def sort_THINGS(THINGS_EEG_data, THINGS_t):
     del THINGS_EEG_data
     return sorted_THINGS_EEG_data, THINGS_t
 
-def correlation_and_plot(args, dream_subj, dream_t, sorted_dream_EEG_data, sorted_THINGS_EEG_data):
+def correlation_and_plot(args, dream_category, THINGS_category, dream_subj, dream_t, sorted_dream_EEG_data, sorted_THINGS_EEG_data):
     """
     Parameters
     ----------
     args : Namespace
         Input arguments.
+    dream_category: str
+        The category of dreams 
+    THINGS_category: str
+        The category of THINGS images selected
     dream_subj: int
         The idx of target dream under the category that you select for analysis.
     dream_t: list of float
@@ -228,7 +232,7 @@ def correlation_and_plot(args, dream_subj, dream_t, sorted_dream_EEG_data, sorte
     plt.tight_layout()
     
     # Save figure
-    save_folder = os.path.join(args.project_dir, 'results', args.category)
+    save_folder = os.path.join(args.project_dir, 'results', dream_category+' dreams-'+THINGS_category+' images')
     if os.path.isdir(save_folder) == False:
         os.makedirs(save_folder)
     save_dir = os.path.join(save_folder, dream_subj[6:-4])

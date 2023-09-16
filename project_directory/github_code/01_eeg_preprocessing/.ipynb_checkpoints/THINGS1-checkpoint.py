@@ -1,30 +1,29 @@
-"""Preprocess the  raw EEG data: channel selection, epoching, frequency
-downsampling, baseline correction, multivariate noise normalization (MVNN),
-sorting of the data image conditions and reshaping the data to:
-Image conditions × EEG repetitions × EEG channels × EEG time points.
-Then, the data of both test and training EEG partitions is saved.
+"""
+Preprocesses the raw EEG file: channel selection, creating annotations 
+and events, re-reference, bandpass filter, epoching, baseline correction,
+frequency downsampling, sorting the test EEG data according to the image 
+conditions, multivariate noise normalization (MVNN) and reshaping the 
+data to: Image conditions  × EEG channels × EEG time points.
+Then, the test EEG data is saved.
 
 Parameters
 
 ----------
-sub : int
+project_dir : str
+	Directory of the project folder.
+subj : int
 	Used subject.
-n_ses : int
-	Number of EEG sessions.
 sfreq : int
 	Downsampling frequency.
 mvnn_dim : str
 	Whether to compute the MVNN covariace matrices for each time point
 	('time') or for each epoch/repetition ('epochs').
-project_dir : str
-	Directory of the project folder.
+
 
 """
 
 import argparse
-from THINGS_func import epoching
-from THINGS_func import mvnn
-from THINGS_func import save_prepr
+from THINGS1_func import epoching, mvnn, save_prepr
 
 
 # =============================================================================
@@ -32,13 +31,12 @@ from THINGS_func import save_prepr
 # =============================================================================
 parser = argparse.ArgumentParser()
 parser.add_argument('--project_dir', default='../project_directory', type=str)
-parser.add_argument('--sub', default=1, type=int)
-parser.add_argument('--n_ses', default=4, type=int)
+parser.add_argument('--subj', default=1, type=int)
 parser.add_argument('--sfreq', default=100, type=int)
 parser.add_argument('--mvnn_dim', default='time', type=str)
-parser.add_argument('--electrodes', default='occipital', type=str)
 args = parser.parse_args()
 
+print('')
 print('>>> EEG data preprocessing <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
@@ -51,19 +49,13 @@ seed = 20200220
 # =============================================================================
 # Epoch and sort the data
 # =============================================================================
-# Channel selection, epoching, baseline correction and frequency downsampling of
-# the test and training data partitions.
-# Then, the conditions are sorted and the EEG data is reshaped to:
-# Image conditions × EGG repetitions × EEG channels × EEG time points
-# This step is applied independently to the data of each partition and session.
-epoched_test, _, ch_names, times = epoching(args, 'test', seed)
-epoched_train, img_conditions_train, _, _ = epoching(args, 'training', seed)
+epoched_test, ch_names, times = epoching(args)
+epoched_train, _, _ = epoching(args)
 
 
 # =============================================================================
 # Multivariate Noise Normalization
 # =============================================================================
-# MVNN is applied independently to the data of each session.
 whitened_test, whitened_train = mvnn(args, epoched_test, epoched_train)
 del epoched_test, epoched_train
 
