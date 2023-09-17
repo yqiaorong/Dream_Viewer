@@ -6,16 +6,15 @@ project_dir : str
 	Directory of the project folder.
 dnn_feature_maps : str
     The DNN feature maps used to train the encoding model.
-test_subj : int
-    Used test subject.
 """
 
-import os
 import argparse
 import numpy as np
+import pingouin as pg
+from tqdm import tqdm
 from matplotlib import pyplot as plt
-from sklearn.linear_model import LinearRegression
-from scipy.stats import pearsonr as corr
+
+from encoding_func import train_model, test_model
 
 # =============================================================================
 # Input arguments
@@ -25,7 +24,6 @@ parser.add_argument('--wake_data_dir',
 					default='../project_directory/eeg_dataset/wake_data', 
 					type=str)
 parser.add_argument('--dnn_feature_maps',default='alexnet',type=str)
-parser.add_argument('--test_subj', default=1, type=int)
 args = parser.parse_args()
 
 print('>>> Test the encoding model on THINGS1 <<<')
@@ -34,80 +32,55 @@ for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
 
 # =============================================================================
-# Load the DNN feature maps
+# Train the encoding model and predict the EEG test data
 # =============================================================================
-# Load the training DNN feature maps directory
-dnn_parent_dir = os.path.join(args.wake_data_dir, 'THINGS_EEG2', 'dnn_feature_maps',
-    'pca_feature_maps', args.dnn_feature_maps, 'pretrained-True', 'layers-all')
-# Load the training DNN feature maps
-dnn_fmaps_train = np.load(os.path.join(dnn_parent_dir,'pca_feature_maps_training.npy'
-                                       ), allow_pickle=True).item()
-# Load the test DNN feature maps
-dnn_fmaps_test = np.load(os.path.join(dnn_parent_dir,'pca_feature_maps_test.npy'
-                                      ), allow_pickle=True).item()
+pred_eeg = train_model(args)
 
 # =============================================================================
-# Train the encoding models
-# =============================================================================
-# Load the THINGS2 training EEG data directory
-eeg_train_dir = os.path.join(args.wake_data_dir,'THINGS_EEG2','preprocessed_data')
-# Iterate over THINGS2 subjects
-eeg_data_train = []
-for train_subj in range(1,11):
-    # Load the THINGS2 training EEG data
-    data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
-						'preprocessed_eeg_training.npy'), allow_pickle=True).item()
-    # Average the training EEG data across repetitions
-    data_avg = np.mean(data['preprocessed_eeg_data'], 1)
-    # Merge the dimension of EEG channels and times
-    data_avg = np.reshape(data_avg,(data_avg.shape[0], -1))
-    eeg_data_train.append(data_avg)
-    if train_subj == 1:
-          train_ch_names = data['ch_names']
-          train_times = data['times']
-    else:
-        pass
-    del data, data_avg
-# Average the training EEG data across subjects
-eeg_data_train = np.mean(eeg_data_train,0)
-# Train the encoding models
-reg = LinearRegression().fit(dnn_fmaps_train['all_layers'],eeg_data_train)
-# Predict the THINGS1 test EEG data
-pred_eeg_data_test = reg.predict(dnn_fmaps_test['all_layers'])
-# Merge the dimension of EEG channels and times
-pred_eeg_data_test = np.reshape(pred_eeg_data_test,
-                                (-1,len(train_ch_names),len(train_times)))
-
-# =============================================================================
-# Test the encoding models
+# Test the encoding model on each test subject
 # =============================================================================
 
-# Load the THINGS1 test EEG data 
-eeg_test_dir = os.path.join(args.wake_data_dir,'THINGS_EEG1','preprocessed_data',
-                            'sub-'+format(args.test_subj,'02'))
-eeg_data_test = np.load(os.path.join(eeg_test_dir, 'preprocessed_eeg_test.npy'),
-                        allow_pickle=True).item()
-test_ch_names = eeg_data_test ['ch_names']
-test_times = eeg_data_test ['times']
+# Test subjects list
+test_subjs = [x for x in range(1, 51) if x != 6]
 
-# Average the test EEG data across repetitions
-eeg_data_test_avg = np.mean(eeg_data_test['preprocessed_eeg_data'], 1)
-
-# Calculate the encoding accuracy
-encoding_accuracy = np.zeros((len(test_ch_names),len(test_times)))
-for t in range(len(test_times)):
-    for c in range(len(test_ch_names)):
-        encoding_accuracy[c,t] = corr(pred_eeg_data_test[:,c,t],
-            eeg_data_test_avg[:,c,t])[0]
+# Get the encoding accuracy for each subject
+tot_accuracy = np.empty((49,100))
+for i, test_subj in enumerate(tqdm(test_subjs)):
+    accuracy, times = test_model(args, test_subj, pred_eeg)
+    tot_accuracy[i] = accuracy
         
-# Plot the results
-plt.figure()
+# Plot all the results
+plt.figure(1)
 plt.plot([-.2, .8], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
-plt.plot(eeg_data_test['times'], np.mean(encoding_accuracy, 0), label='alexnet')
+for i in range(49):
+    plt.plot(times, tot_accuracy[i], alpha=0.2)
+plt.plot(times, np.mean(tot_accuracy,0), color='k', label='Correlation mean score')
 plt.xlabel('Time (s)')
 plt.xlim(left=-.2, right=.8)
 plt.ylabel('Pearson\'s $r$')
-plt.ylim(bottom=-.1, top=.7)
-plt.title('Encoding accuracy on THINGS1')
+plt.ylim(bottom=-.1, top=.3)
+plt.title(f'Encoding accuracy on THINGS1 ({args.dnn_feature_maps})')
 plt.legend(loc='best')
+
+# Set random seed for reproducible results
+seed = 20200220
+# Set the confidence interval
+ci = np.empty((2,len(times)))
+
+plt.figure(2)
+plt.plot([-.2, .8], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
+# Calculate the confidence interval
+for i in range(len(times)):
+    ci[:,i] = pg.compute_bootci(tot_accuracy[:,i], func='mean', seed=seed)
+# Plot the results with confidence interval
+plt.plot(times, np.mean(tot_accuracy,0), color='salmon', label='Confidence interval')
+plt.fill_between(times, np.mean(tot_accuracy,0), ci[0], color='salmon', alpha=0.2)
+plt.fill_between(times, np.mean(tot_accuracy,0), ci[1], color='salmon', alpha=0.2)
+plt.xlabel('Time (s)')
+plt.xlim(left=-.2, right=.8)
+plt.ylabel('Pearson\'s $r$')
+plt.ylim(bottom=-.1, top=.3)
+plt.title(f'Encoding accuracy on THINGS1 ({args.dnn_feature_maps})')
+plt.legend(loc='best')
+
 plt.show()
