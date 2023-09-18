@@ -19,7 +19,7 @@ def train_model(args):
     from tqdm import tqdm
     from sklearn.linear_model import LinearRegression
 
-        ### Load the DNN feature maps ###
+    ### Load the DNN feature maps ###
     # Load the training DNN feature maps directory
     dnn_parent_dir = os.path.join(args.wake_data_dir, 'THINGS_EEG2', 'dnn_feature_maps',
         'pca_feature_maps', args.dnn_feature_maps, 'pretrained-True', 'layers-all')
