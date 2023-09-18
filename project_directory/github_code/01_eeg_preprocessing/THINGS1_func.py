@@ -114,6 +114,8 @@ def epoching(args):
         del indices, data
     # Convert list to array
     sort_data = np.array(sort_data)
+
+    ### Outputs ###
     return sort_data, ch_names, times
 
 def mvnn(args, epoched_data):
