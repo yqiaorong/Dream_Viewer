@@ -49,11 +49,19 @@ for i, test_subj in enumerate(tqdm(test_subjs)):
     accuracy, times = test_model(args, test_subj, pred_eeg)
     tot_accuracy[i] = accuracy
         
-# Plot all the results
+# =============================================================================
+# Plot the correlation results
+# =============================================================================
+
+### All subjects ###
 plt.figure(1)
 plt.plot([-.2, .8], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
-for i in range(49):
-    plt.plot(times, tot_accuracy[i], alpha=0.2)
+# Set the plot colour spectum
+cmap = "cividis"
+colours = plt.colormaps[cmap](np.linspace(0,1,len(test_subjs)))
+# Plot
+for i in range(len(test_subjs)):
+    plt.plot(times, tot_accuracy[i], color = colours[i], alpha=0.2)
 plt.plot(times, np.mean(tot_accuracy,0), color='k', label='Correlation mean score')
 plt.xlabel('Time (s)')
 plt.xlim(left=-.2, right=.8)
@@ -62,11 +70,12 @@ plt.ylim(bottom=-.1, top=.3)
 plt.title(f'Encoding accuracy on THINGS1 ({args.dnn_feature_maps})')
 plt.legend(loc='best')
 
+### Average with confidence interval ###
 # Set random seed for reproducible results
 seed = 20200220
 # Set the confidence interval
 ci = np.empty((2,len(times)))
-
+# Plot
 plt.figure(2)
 plt.plot([-.2, .8], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
 # Calculate the confidence interval

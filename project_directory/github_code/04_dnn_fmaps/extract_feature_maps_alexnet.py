@@ -17,6 +17,7 @@ from torchvision import models
 import torch.nn as nn
 import numpy as np
 import torch
+from tqdm import tqdm
 from torch.autograd import Variable as V
 from torchvision import transforms as trn
 import os
@@ -103,10 +104,10 @@ centre_crop = trn.Compose([
 
 # Image directories
 if args.dataset == 'THINGS_EEG2':
-	img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_date', 
+	img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
 							'THINGS_EEG2', 'image_set')
 elif args.dataset == 'SCIP':
-	img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_date', 
+	img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
 							'SCIP', 'stimuli' ,'pictorial')
 img_type = os.listdir(img_set_dir)
 for p in img_type:
@@ -119,14 +120,14 @@ for p in img_type:
 	image_list.sort()
 
 	# Create the saving directory if not existing
-	save_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_date', args.dataset, 
+	save_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', args.dataset, 
 						 'dnn_feature_maps', 'full_feature_maps', 'alexnet', 
 						 'pretrained-'+str(args.pretrained), p)
 	if os.path.isdir(save_dir) == False:
 		os.makedirs(save_dir)
 
 	# Extract and save the feature maps
-	for i, image in enumerate(image_list):
+	for i, image in enumerate(tqdm(image_list)):
 		img = Image.open(image).convert('RGB')
 		input_img = V(centre_crop(img).unsqueeze(0))
 		if torch.cuda.is_available():
