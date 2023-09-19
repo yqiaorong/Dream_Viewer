@@ -143,7 +143,6 @@ def mvnn(epoched_data):
     import scipy
     
     ### Compute the covariance matrices with shape: EEG channels × EEG channels  ###
-    # sigma = np.empty((epoched_data.shape[0],  epoched_data.shape[0]))
     
     # Compute covariace matrices at each time point, and then
     # average across time points
@@ -154,8 +153,7 @@ def mvnn(epoched_data):
     # The matrix power is -0.5, which represents inverse square root
 
     ### Whiten the data ###
-    whitened_data = np.reshape((epoched_data.swapaxes(0, 1) @ sigma_inv).swapaxes(0, 1), 
-                               (epoched_data.shape[0], epoched_data.shape[1]))
+    whitened_data = (epoched_data.swapaxes(0, 1) @ sigma_inv).swapaxes(0, 1)
     ### Output ###
     return whitened_data
 
@@ -190,8 +188,5 @@ def save_prepr(args, whitened_data, ch_names, times):
         'times': times
     }
     # Save the preprocessed EEG data
-    save_file = os.path.join(save_dir, 'prepr_'+args.PSG)
-    if not os.path.isdir(save_file):
-        os.makedirs(save_file)
-    np.save(save_file, my_dict)
+    np.save(os.path.join(save_dir, 'prepr_'+args.PSG), my_dict)
     del my_dict

@@ -29,7 +29,7 @@ def train_model(args):
     # Load the test DNN feature maps
     dnn_fmaps_test = np.load(os.path.join(dnn_parent_dir,'pca_feature_maps_test.npy'
                                         ), allow_pickle=True).item()
-    
+    print(dnn_fmaps_train['all_layers'].shape, dnn_fmaps_test['all_layers'].shape)
     ### Train the encoding models ###
     # Load the THINGS2 training EEG data directory
     eeg_train_dir = os.path.join(args.wake_data_dir,'THINGS_EEG2','preprocessed_data')
