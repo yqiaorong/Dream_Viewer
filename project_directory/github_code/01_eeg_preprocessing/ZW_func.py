@@ -10,7 +10,7 @@ def category_raw(args):
     from collections import Counter
 
     # The filepath of the categories file (should never change).
-    THINGS_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS')
+    THINGS_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS_EEG2')
     import_path_categories = os.path.join(THINGS_dir, "category53_longFormat.tsv")
 
     # The filepath of the dream reports file.
@@ -64,80 +64,90 @@ def category_raw(args):
     
     return IDs
 
-def epoching(args, raw):
+def epoching(args):
+    """The function preprocesses the raw dream EEG file: channel selection, 
+    re-reference, bandpass filter, epoching, and frequency downsampling. 
+
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+
+    Returns
+    -------
+    epoched_data : array of shape (channel,time)
+        Epoched EEG test data.
+    ch_names : list of str
+        EEG channel names.
+    times : list of float
+        EEG time points.
+    """
+
     import os
     import mne
-    import numpy as np
 
-    ### Load the sample THINGS data ###
-    # Load the sample THINGS prepr test dir 
-    THINGS_prepr_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 'THINGS',
-    'preprocessed_data')
-    # Load sample THINGS prepr test data 
-    THINGS_sample_data = np.load(os.path.join(THINGS_prepr_dir, 'occipital', 'sub-01', 
-                                              'preprocessed_eeg_test.npy'), allow_pickle=True).item()
-    # Load THINGS channels 
-    THINGS_ch = THINGS_sample_data['ch_names']
-    del THINGS_sample_data
-    # Capitalize THINGS channel names
-    THINGS_ch = [ch.upper() for ch in THINGS_ch]
+    ### Load dream EEG data
+    # The path of target PSG file
+    Zhang_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+    'Zhang_Wamsley', 'Data', 'PSG')
+    # Read the target PSG file
+    raw = mne.io.read_raw_edf(os.path.join(Zhang_dir, 'subject'+args.PSG+'.edf'),
+    preload=True)
 
-    ### Preprocess the dream data ###
-    chan_idx = np.asarray(mne.pick_channels_regexp(raw.info['ch_names'],
-        '^O *|^P *'))
-    new_chans = [raw.info['ch_names'][c] for c in chan_idx]
-    raw.pick(new_chans)
-    # Resampling 
+    ### Channel selection of dream dataset ###
+    # The dream dataset misses the 'Poz' channel, idx 12 in THINGS2
+    # THINGS2 channel names
+    TH_ch = ['Pz','P3','P7','O1','Oz','O2','P4','P8','P1','P5','Po7','Po3','Po4','Po8','P6','P2']
+    # Modify THINGS2 channel names according to ZW
+    TH_ch = [ch+'-REF' for ch in TH_ch]
+    # Pick up occipital and parietal channels
+    raw.pick(TH_ch)
+
+    ### Re-reference and bandpass filter all channels ###
+    # Re-reference raw 'average'
+    raw.set_eeg_reference()  
+    # Bandpass filter
+    raw.filter(l_freq=0.1, h_freq=100)
+    
+    ### Resampling and epoching ###
+    # Downsampling
     raw = raw.resample(args.sfreq)
-    # Get channel names
-    dream_ch = raw.info['ch_names']
-    # Capitalize and shorten dream channel names
-    dream_ch = [ch[:-4].upper() for ch in dream_ch]
-    # Extract the index of the channel in THINGS EEG which presents in THINGS EEG but not in dream
-    extra_dream_ch_idx = [i for i, ch in enumerate(dream_ch) if ch not in THINGS_ch]
-    # Get times
-    times = raw.times
     # Get epoched data
     epoched_data = raw.get_data()  
-    # Creat sub epoched data by removing extra dream EEG channels 
-    if len(extra_dream_ch_idx) != 0:
-        sub_epoched_data = np.delete(epoched_data, extra_dream_ch_idx, axis=0)
-    else:
-        sub_epoched_data = epoched_data
-    del epoched_data
 
-    ### Sort the dream EEG data ###
-    # Extract the index of the channel in THINGS EEG which presents in THINGS EEG but not in dream
-    extra_THINGS_ch_idx = next(i for i, ch in enumerate(THINGS_ch) if ch not in dream_ch)
-    print(f'The redundant EEG channel idx in THINGS: {extra_THINGS_ch_idx}')
-    # Drop the redundant channel from THINGS channels 
-    THINGS_ch.pop(extra_THINGS_ch_idx) 
-    # Sort the dream channel indices
-    dream_idx = [dream_ch.index(ch) for ch in THINGS_ch]
-    # Sort dream EEG data according to the dream channel indices
-    sorted_epoched_data = np.empty((sub_epoched_data.shape))
-    # Sort dream EEG channels according to the dream channel indices
-    ch_names = []
-    for ii, i in enumerate(dream_idx):
-        sorted_epoched_data[ii] = sub_epoched_data[i] 
-        ch_names.append(dream_ch[i])
-    del sub_epoched_data
+    ### Get epoched channels and times ###
+    ch_names = raw.info['ch_names']
+    times = raw.times
     
     ### Output ###
-    return sorted_epoched_data, ch_names, times
+    return epoched_data, ch_names, times
 
-def mvnn(args, epoched_data):
+def mvnn(epoched_data):
+    """Compute the covariance matrices of the EEG data (calculated for each
+    time-point). The inverse of the resulting averaged covariance matrix is 
+    used to whiten the EEG data.
+
+    Parameters
+    ----------
+    epoched_data : array of shape (image,repetition,channel,time)
+        Epoched EEG data.
+
+    Returns
+    -------
+    whitened_data : array of shape (image,repetition,channel,time)
+        Whitened EEG data.
+    """
+
     import numpy as np
     from sklearn.discriminant_analysis import _cov
     import scipy
     
     ### Compute the covariance matrices with shape: EEG channels × EEG channels  ###
-    sigma = np.empty((epoched_data.shape[0],  epoched_data.shape[0]))
+    # sigma = np.empty((epoched_data.shape[0],  epoched_data.shape[0]))
     
     # Compute covariace matrices at each time point, and then
     # average across time points
-    if args.mvnn_dim == "time":
-        sigma = _cov(epoched_data.T, shrinkage='auto')
+    sigma = _cov(epoched_data.T, shrinkage='auto')
 
     # Compute the inverse of the covariance matrix
     sigma_inv = scipy.linalg.fractional_matrix_power(sigma, -0.5) 
@@ -149,27 +159,39 @@ def mvnn(args, epoched_data):
     ### Output ###
     return whitened_data
 
-def save_prepr(args, whitened_data, ch_names, times, ID_select):
+def save_prepr(args, whitened_data, ch_names, times):
+    """The preprocessed dream EEG data is saved
+
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+    whitened_data : array of shape (image,repetition,channel,time)
+        Whitened EEG data.
+    ch_names : list of str
+        EEG channel names.
+    times : list of float
+        EEG time points.
+
+    """
     import numpy as np
     import os
 
     ### Save the data ###
-    save_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 'Zhang_Wamsley', 'preprocessed_data')
-    # Create the directory if it doesn't exist #
+    save_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+    'Zhang_Wamsley', 'preprocessed_data')
+    # Create the directory if it doesn't exist 
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
-
-    # Insert the data into a dictionary #
+    # Insert the data into a dictionary 
     my_dict = {
         'preprocessed_eeg_data': whitened_data,
         'ch_names': ch_names,
         'times': times
     }
-
-    folder_name = args.category
-    save_folder = os.path.join(save_dir, folder_name)
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
-    file_name = 'prepr_'+ID_select
-    np.save(os.path.join(save_folder, file_name), my_dict)
+    # Save the preprocessed EEG data
+    save_file = os.path.join(save_dir, 'prepr_'+args.PSG)
+    if not os.path.isdir(save_file):
+        os.makedirs(save_file)
+    np.save(save_file, my_dict)
     del my_dict

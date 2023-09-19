@@ -52,7 +52,7 @@ def epoching(args):
         raw = raw.pick(raw.info['ch_names'][:63])
     else:
         pass
-    # Select occipital channels
+    # Pick up occipital and parietal channels
     chan_idx = np.asarray(mne.pick_channels_regexp(raw.info['ch_names'],
                                                    '^O *|^P *'))
     new_chans = [raw.info['ch_names'][c] for c in chan_idx]

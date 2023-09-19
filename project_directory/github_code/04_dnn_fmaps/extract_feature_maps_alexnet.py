@@ -6,7 +6,7 @@ Parameters
 pretrained : bool
 	If True use a pretrained network, if False a randomly initialized one.
 dataset : str
-    The target dataset of extracting feature maps.
+    Used dataset among 'THINGS_EEG2', 'SCIP'
 project_dir : str
 	Directory of the project folder.
 
@@ -99,8 +99,9 @@ centre_crop = trn.Compose([
 # =============================================================================
 # Load the images and extract the corresponding feature maps
 # =============================================================================
-# Extract the feature maps of (1) training images, (2) test images,
-# (3) ILSVRC-2012 validation images, (4) ILSVRC-2012 test images.
+# Extract the feature maps of 
+# THINGS2 (1) training images, (2) test images.
+# SCIP (1) cartoonflowers, (2) cartoonguitar, (3) cartoonpenguins.
 
 # Image directories
 if args.dataset == 'THINGS_EEG2':
@@ -108,10 +109,10 @@ if args.dataset == 'THINGS_EEG2':
 							'THINGS_EEG2', 'image_set')
 elif args.dataset == 'SCIP':
 	img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
-							'SCIP', 'stimuli' ,'pictorial')
+							'SCIP', 'stimuli' ,'image')
 img_type = os.listdir(img_set_dir)
 for p in img_type:
-	part_dir = os.path.join(img_set_dir, p)
+	part_dir = os.path.join(img_set_dir, p, 'selected')
 	image_list = []
 	for root, dirs, files in os.walk(part_dir):
 		for file in files:

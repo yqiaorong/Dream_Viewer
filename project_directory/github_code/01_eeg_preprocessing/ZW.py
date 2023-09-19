@@ -1,29 +1,45 @@
-import argparse
-import mne
-import os 
+"""Preprocesses the raw EEG file: channel selection, re-reference, bandpass 
+filter, epoching, frequency downsampling, multivariate noise normalization 
+(MVNN) and reshaping the data to: EEG channels × EEG time points.
+Then, the dream EEG data is saved.
 
-from ZW_get_categories_func import epoching, mvnn, save_prepr
+Parameters 
+
+----------
+project_dir : str
+	Directory of the project folder.
+PSG : str
+	Used subject.
+sfreq : int
+	Downsampling frequency.
+"""
+
+import argparse
+from ZW_func import epoching, mvnn, save_prepr
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--project_dir', default='../project_directory', type=str)
 parser.add_argument('--PSG', default='010_Morning', type=str)
-parser.add_argument('--category', default='NA', type=str)
 parser.add_argument('--sfreq', default=100, type=int)
-parser.add_argument('--chunk_size', default='100', type=int)
-parser.add_argument('--mvnn_dim', default='time', type=str)
 args = parser.parse_args()
 
-##############################################################################
-# Preprocess the raw EEG file 
-##############################################################################
+print('>>> Zhang & Wamsley dream EEG data preprocessing <<<')
+print('\nInput arguments:')
+for key, val in vars(args).items():
+	print('{:16} {}'.format(key, val))
 
-# The path of target PSG file
-Zhang_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data',
-                         'Zhang_Wamsley')
-import_path_PSG = os.path.join(Zhang_dir, 'Data', 'PSG')
+# =============================================================================
+# Epoch and sort the data
+# =============================================================================
+data, ch_names, times = epoching(args)
 
-# Read the target PSG file
-raw = mne.io.read_raw_edf(os.path.join(import_path_PSG, 'subject'+args.PSG+'.edf'))
-data, ch_names, times = epoching(args, raw)
-whitened_data = mvnn(args, data)
-save_prepr(args, whitened_data, ch_names, times, args.PSG)
+# =============================================================================
+# Multivariate Noise Normalization
+# =============================================================================
+whitened_data = mvnn(data)
+del data
+
+# =============================================================================
+# Save the preprocessed data
+# =============================================================================
+save_prepr(args, whitened_data, ch_names, times)
