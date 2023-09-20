@@ -1,4 +1,4 @@
-# Running the analysis-preprocessing:
+# Running the analysis:
 
 The files ended with '_func.py' have no need to be run.
 
