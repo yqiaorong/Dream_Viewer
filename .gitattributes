@@ -1,2 +1,2 @@
 *.py linguist-language=python
-*.ipynb merge=jupyternotebook
+*.ipynb linguist-language=python
