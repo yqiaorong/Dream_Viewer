@@ -1,6 +1,6 @@
 # Running the analysis:
 
-The files ended with '_func.py' have no need to be run.
+The files ended with '_func.py' have no needs to be run.
 
 ## 01_eeg_preprocessing
 
@@ -22,10 +22,6 @@ The files ended with '_func.py' have no need to be run.
 
 ## 04_dnn_fmaps
 
-* alexnet_THINGS.py (This file extracts dnn alexnet feature maps from 
+* alexnet_THINGS.py (This file extracts dnn alexnet feature maps from THINGS images)
 
-THINGS images)
-
-* alexnet_SCIP.py (This file extracts dnn alexnet feature maps from 
-
-SCIP images)
+* alexnet_SCIP.py (This file extracts dnn alexnet feature maps from SCIP images)
