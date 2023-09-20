@@ -1,4 +1,4 @@
-# Dream_Decoding
+# Dream Viewer
 
 Using waking EEG dataset to decodes dream content. 
 
