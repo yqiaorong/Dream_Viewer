@@ -13,8 +13,6 @@ def train_scaler_pca(args):
         the standardization model.
     pca : list of models
         the pca model.
-    fmaps_train : 
-        training image feature maps.
     all_layers : list
         The list of names of layers.
     layer_names : list
@@ -22,6 +20,7 @@ def train_scaler_pca(args):
     """
         
     import os
+    import pickle
     import numpy as np
     from tqdm import tqdm
     from sklearn.preprocessing import StandardScaler
@@ -65,12 +64,17 @@ def train_scaler_pca(args):
     elif args.layers == 'single':
         for l, dnn_layer in enumerate(layer_names):
             fmaps_train[dnn_layer] = np.squeeze(np.asarray(feats[l]))
-
+    
     # Standardize the data
     scaler = []
     for l, dnn_layer in enumerate(layer_names):
         scaler.append(StandardScaler())
-        scaler[l].partial_fit(fmaps_train[dnn_layer])
+        # The number of subsets
+        num_subset = 1654
+        # The size of each subset
+        chunk_size = 16540/num_subset
+        for i in tqdm(range(num_subset),desc='StandardScaler'):
+            scaler[l].partial_fit(fmaps_train[dnn_layer][int(i*chunk_size):int(i*chunk_size+chunk_size)])
 
     # Apply PCA
     pca = []
@@ -79,7 +83,25 @@ def train_scaler_pca(args):
             degree=4, random_state=seed))
         pca[l].fit(fmaps_train[dnn_layer])
 
-    return scaler, pca, fmaps_train, all_layers, layer_names
+    ### Save the downsampled feature maps ###
+    save_dir = os.path.join(args.project_dir,'eeg_dataset','wake_data','THINGS_EEG2',
+                            'dnn_feature_maps','pca_feature_maps', args.dnn, 
+                            'pretrained-'+str(args.pretrained), 'layers-'+args.layers)
+    file_name = 'pca_feature_maps_training_images'
+    # If the training feature maps file exists, pass; else, save the file.
+    if os.path.isdir(save_dir) == False:
+        print('Training feature maps is saving.')
+        os.makedirs(save_dir)
+        # Specify the file path
+        file_path = os.path.join(save_dir, file_name)
+        # Open the file for writing in binary mode ('wb')
+        with open(file_path, 'wb') as fp:
+            pickle.dump(fmaps_train, fp, protocol=4)
+    else:
+        print('Training feature maps already exists.')
+    del fmaps_train
+
+    return scaler, pca, all_layers, layer_names
 
 def apply_scaler_pca(args, img_category, scaler, pca, all_layers, layer_names):
     """The function apply the standardization and pca models on the target 

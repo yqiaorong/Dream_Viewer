@@ -20,10 +20,8 @@ n_components : int
 """
 
 import argparse
-import numpy as np
-import os
-
 from pca_func import train_scaler_pca, apply_scaler_pca
+
 
 # =============================================================================
 # Input arguments
@@ -43,23 +41,14 @@ print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
 
+
 # =============================================================================
 # Apply PCA on the training images feature maps
 # =============================================================================
 # The standardization and PCA statistics computed on the THINGS training images.
-# feature maps are also applied to the test images feature maps.
 
-scaler, pca, fmaps_train, all_layers, layer_names = train_scaler_pca(args)
+scaler, pca, all_layers, layer_names = train_scaler_pca(args)
 
-# Save the downsampled feature maps
-save_dir = os.path.join(args.project_dir,'eeg_dataset','wake_data','THINGS_EEG2',
-						'dnn_feature_maps','pca_feature_maps', args.dnn, 
-						'pretrained-'+str(args.pretrained), 'layers-'+args.layers)
-file_name = 'pca_feature_maps_training_images'
-if os.path.isdir(save_dir) == False:
-	os.makedirs(save_dir)
-np.save(os.path.join(save_dir, file_name), fmaps_train)
-del fmaps_train
 
 # =============================================================================
 # Apply PCA on the test images feature maps
