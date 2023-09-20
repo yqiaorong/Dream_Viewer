@@ -1,12 +1,10 @@
-"""Extract and save the AlexNet feature maps of the training and test images,
-and of the ILSVRC-2012 validation and test images.
+"""Extract and save the AlexNet feature maps of the SCIP selected 
+cartoonflowers, cartoonguitar and cartoonpenguins images.
 
 Parameters
 ----------
 pretrained : bool
 	If True use a pretrained network, if False a randomly initialized one.
-dataset : str
-    Used dataset among 'THINGS_EEG2', 'SCIP'
 project_dir : str
 	Directory of the project folder.
 
@@ -28,8 +26,7 @@ from PIL import Image
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--pretrained', default=True, type=bool)
-parser.add_argument('--dataset', default='THINGS_EEG2', type=str)
+parser.add_argument('--pretrained', default=False, type=bool)
 parser.add_argument('--project_dir', default='../project_directory', type=str)
 args = parser.parse_args()
 
@@ -97,45 +94,48 @@ centre_crop = trn.Compose([
 
 
 # =============================================================================
-# Load the images and extract the corresponding feature maps
+# Load the SCIP images and extract the corresponding feature maps
 # =============================================================================
 # Extract the feature maps of 
-# THINGS2 (1) training images, (2) test images.
-# SCIP (1) cartoonflowers, (2) cartoonguitar, (3) cartoonpenguins.
+# (1) cartoonflowers, (2) cartoonguitar, (3) cartoonpenguins.
 
-# Image directories
-if args.dataset == 'THINGS_EEG2':
-	img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
-							'THINGS_EEG2', 'image_set')
-elif args.dataset == 'SCIP':
-	img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
-							'SCIP', 'stimuli' ,'image')
-img_type = os.listdir(img_set_dir)
-for p in img_type:
-	part_dir = os.path.join(img_set_dir, p, 'selected')
-	image_list = []
-	for root, dirs, files in os.walk(part_dir):
-		for file in files:
-			if file.endswith(".jpg") or file.endswith(".JPEG") or file.endswith(".png"):
-				image_list.append(os.path.join(root,file))
-	image_list.sort()
+# The main image directory
+img_set_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
+							'SCIP', 'stimuli' ,'pictorial')
+img_category = os.listdir(img_set_dir)
 
-	# Create the saving directory if not existing
-	save_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', args.dataset, 
-						 'dnn_feature_maps', 'full_feature_maps', 'alexnet', 
-						 'pretrained-'+str(args.pretrained), p)
-	if os.path.isdir(save_dir) == False:
-		os.makedirs(save_dir)
+for c in img_category[:3]: # Select the main three categories
+	# The image type directory within category
+	img_category_dir = os.path.join(img_set_dir, c, 'selected')
+	img_type = os.listdir(img_category_dir)
+	for p in img_type:
+		if p.endswith(".jpg") or p.endswith(".JPEG") or p.endswith(".png"):
+			pass
+		else:
+			img_dir = os.path.join(img_category_dir, p)
+			image_list = []
+			for root, dirs, files in os.walk(img_dir):
+				for file in files:
+					if file.endswith(".jpg") or file.endswith(".JPEG") or file.endswith(".png"):
+						image_list.append(os.path.join(root,file))
+			image_list.sort()
 
-	# Extract and save the feature maps
-	for i, image in enumerate(tqdm(image_list)):
-		img = Image.open(image).convert('RGB')
-		input_img = V(centre_crop(img).unsqueeze(0))
-		if torch.cuda.is_available():
-			input_img=input_img.cuda()
-		x = model.forward(input_img)
-		feats = {}
-		for f, feat in enumerate(x):
-			feats[model.feat_list[f]] = feat.data.cpu().numpy()
-		file_name = p + '_' + format(i+1, '07')
-		np.save(os.path.join(save_dir, file_name), feats)
+			# Create the saving directory if not existing
+			save_dir = os.path.join(args.project_dir,'eeg_dataset','wake_data',
+						   'SCIP','dnn_feature_maps','full_feature_maps','alexnet',
+						   'pretrained-'+str(args.pretrained), c)
+			if os.path.isdir(save_dir) == False:
+				os.makedirs(save_dir)
+
+			# Extract and save the feature maps
+			for i, image in enumerate(tqdm(image_list, desc=c+'_'+p)):
+				img = Image.open(image).convert('RGB')
+				input_img = V(centre_crop(img).unsqueeze(0))
+				if torch.cuda.is_available():
+					input_img=input_img.cuda()
+				x = model.forward(input_img)
+				feats = {}
+				for f, feat in enumerate(x):
+					feats[model.feat_list[f]] = feat.data.cpu().numpy()
+				file_name = c + '_' + p + '_' + format(i+1, '02')
+				np.save(os.path.join(save_dir, file_name), feats)
