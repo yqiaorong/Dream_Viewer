@@ -4,7 +4,15 @@ Using waking EEG dataset to decodes dream content.
 
 ## Datasets
 
-The open datasets currently used are [THINGS EEG1](https://www.nature.com/articles/s41597-021-01102-7) and [THINGS EEG2 dataset](https://www.sciencedirect.com/science/article/pii/S1053811922008758?via%3Dihub), [SCIP dataset](https://www.nature.com/articles/s41597-023-02287-9) and [Zhang & Wamsley dataset](https://onlinelibrary.wiley.com/doi/10.1111/psyp.13368). 
+The open datasets currently used are：
+
+* [THINGS EEG1](https://www.nature.com/articles/s41597-021-01102-7) 
+
+* [THINGS EEG2 dataset](https://www.sciencedirect.com/science/article/pii/S1053811922008758?via%3Dihub)
+
+* [SCIP dataset](https://www.nature.com/articles/s41597-023-02287-9)
+
+* [Zhang & Wamsley dataset](https://onlinelibrary.wiley.com/doi/10.1111/psyp.13368)
 
 The path of download:
 
