@@ -70,7 +70,7 @@ def train_scaler_pca(args):
     scaler = []
     for l, dnn_layer in enumerate(layer_names):
         scaler.append(StandardScaler())
-        scaler[l].fit(fmaps_train[dnn_layer])
+        scaler[l].partial_fit(fmaps_train[dnn_layer])
 
     # Apply PCA
     pca = []

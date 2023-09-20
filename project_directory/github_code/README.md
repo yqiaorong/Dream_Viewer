@@ -1,5 +1,9 @@
 # Running the analysis-preprocessing:
 
+The files ended with '_func.py' have no need to be run.
+
+## 01_eeg_preprocessing
+
 * run_all_scripts.py (This preprocesses all datasets, including THINGS1, 
 
   THINGS2, Zhang & Wamsley)
@@ -12,12 +16,16 @@
 
 * ZW.py (This file preprocesses one specific subject of Zhang & Wamsley.)
 
-### No need to run the following files: 
+## 03_validation_test
 
-* DEED_func.py 
+* encoding.py (This file train and test the EEG encoding model)
 
-* THINGS1_func.py
+## 04_dnn_fmaps
 
-* THINGS2_func.py
+* alexnet_THINGS.py (This file extracts dnn alexnet feature maps from 
 
-* ZW_func.py
+THINGS images)
+
+* alexnet_SCIP.py (This file extracts dnn alexnet feature maps from 
+
+SCIP images)

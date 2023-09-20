@@ -34,7 +34,7 @@ parser.add_argument('--dataset', default='THINGS_EEG2', type=str)
 parser.add_argument('--dnn', default='alexnet', type=str)
 parser.add_argument('--pretrained', default=False, type=bool)
 parser.add_argument('--layers', default='single', type=str)
-parser.add_argument('--n_components', default=500, type=int)
+parser.add_argument('--n_components', default=1000, type=int)
 
 args = parser.parse_args()
 
