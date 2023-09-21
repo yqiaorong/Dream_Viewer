@@ -100,12 +100,23 @@ centre_crop = trn.Compose([
 # The image directory
 img_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',
 						   'Zhang_Wamsley','images')
-image_list = os.listdir(img_dir)
+# The list of images
+image_list = []
+for root, dirs, files in os.walk(img_dir):
+	for file in files:
+		if file.startswith('dream'):
+			image_list.append(os.path.join(root,file))
+image_list.sort()
+
+# The list of image names
+img_names = os.listdir(img_dir)
+# Select only png
+img_names = [i for i in img_names if i.startswith('dream')]
 
 # Create the saving directory if not existing
 save_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',
 						'Zhang_Wamsley','dnn_feature_maps','full_feature_maps',
-						'alexnet','pretrained-'+str(args.pretrained))
+						'alexnet','pretrained-'+str(args.pretrained), 'dreams')
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 
@@ -119,5 +130,5 @@ for i, image in enumerate(tqdm(image_list, desc='dreams')):
 	feats = {}
 	for f, feat in enumerate(x):
 		feats[model.feat_list[f]] = feat.data.cpu().numpy()
-	file_name = image
+	file_name = img_names[i][:-4]
 	np.save(os.path.join(save_dir, file_name), feats)

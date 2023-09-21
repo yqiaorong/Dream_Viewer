@@ -30,7 +30,7 @@ parser.add_argument('--pretrained', default=False, type=bool)
 parser.add_argument('--project_dir', default='../project_directory', type=str)
 args = parser.parse_args()
 
-print('Extract feature maps AlexNet <<<')
+print('Extract THINGS feature maps AlexNet <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))

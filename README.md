@@ -48,9 +48,7 @@ The files ended with '_func.py' have no needs to be run.
 
 ### 01_eeg_preprocessing
 
-* run_all_scripts.py (This preprocesses all datasets, including THINGS1, 
-
-  THINGS2, Zhang & Wamsley)
+* run_all_scripts.py (This preprocesses all datasets, including THINGS1, THINGS2, Zhang & Wamsley)
 
 * DEED.py (This file preprocesses one specific subject of DEED.)
 

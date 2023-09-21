@@ -7,9 +7,9 @@ Parameters
 project_dir : str
 	Directory of the project folder.
 dataset : str
-    Used dataset (THINGS_EEG2), or ('SCIP').
+    Used dataset (THINGS_EEG2), ('SCIP') or ('Zhang_Wamsley').
 dnn : str
-	Used DNN among 'alexnet', 'resnet50', 'cornet_s', 'moco'.
+	Used DNN among 'alexnet'.
 pretrained : bool
 	If True use the pretrained network feature maps, if False use the randomly
 	initialized network feature maps.
@@ -28,12 +28,11 @@ from pca_func import train_scaler_pca, apply_scaler_pca
 # =============================================================================
 parser = argparse.ArgumentParser()
 parser.add_argument('--project_dir', default='../project_directory', type=str)
-parser.add_argument('--dataset', default='THINGS_EEG2', type=str)
+parser.add_argument('--dataset', default='Zhang_Wamsley', type=str)
 parser.add_argument('--dnn', default='alexnet', type=str)
-parser.add_argument('--pretrained', default=False, type=bool)
-parser.add_argument('--layers', default='single', type=str)
-parser.add_argument('--n_components', default=1000, type=int)
-
+parser.add_argument('--pretrained', default=True, type=bool)
+parser.add_argument('--layers', default='all', type=str)
+parser.add_argument('--n_components', default=3000, type=int)
 args = parser.parse_args()
 
 print(f'>>> Apply PCA on the {args.dataset} feature maps <<<')
@@ -43,10 +42,9 @@ for key, val in vars(args).items():
 
 
 # =============================================================================
-# Apply PCA on the training images feature maps
+# Train the StandardScaler and PCA models on THINGS EEG2 training feature maps
 # =============================================================================
 # The standardization and PCA statistics computed on the THINGS training images.
-
 scaler, pca, all_layers, layer_names = train_scaler_pca(args)
 
 
@@ -54,8 +52,10 @@ scaler, pca, all_layers, layer_names = train_scaler_pca(args)
 # Apply PCA on the test images feature maps
 # =============================================================================
 if args.dataset == 'THINGS_EEG2':
-    apply_scaler_pca(args, 'test_images', scaler, pca, all_layers, layer_names)
+    apply_scaler_pca(args, 'test', scaler, pca)
 if args.dataset == 'SCIP':
     img_categories = ['cartoonflowers', 'cartoonguitar', 'cartoonpenguins']
     for img_category in img_categories:
-        apply_scaler_pca(args, img_category, scaler, pca, all_layers, layer_names)
+        apply_scaler_pca(args, img_category, scaler, pca)
+if args.dataset == 'Zhang_Wamsley':
+     apply_scaler_pca(args, 'dreams', scaler, pca)
