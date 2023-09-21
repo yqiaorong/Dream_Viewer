@@ -2,10 +2,12 @@
 
 Parameters
 ----------
-project_dir : str
-	Directory of the project folder.
+train_data_dir : str
+	Directory of the training data folder.
 dnn_feature_maps : str
     The DNN feature maps used to train the encoding model.
+test_dataset : str
+    Used test dataset ('THINGS_EEG1')
 """
 
 import argparse
@@ -14,39 +16,41 @@ import pingouin as pg
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
-from encoding_func import train_model, test_model
+from encoding_func import train_model, test_model_THINGS1
 
 # =============================================================================
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--wake_data_dir',
-					default='../project_directory/eeg_dataset/wake_data', 
-					type=str)
-parser.add_argument('--dnn_feature_maps',default='alexnet',type=str)
+parser.add_argument('--project_dir',
+					default='../project_directory', type=str)
+parser.add_argument('--dnn',default='alexnet',type=str)
+parser.add_argument('--test_dataset',default='THINGS_EEG1',type=str)
 args = parser.parse_args()
 
-print('>>> Test the encoding model on THINGS1 <<<')
+print(f'>>> Test the encoding model on {args.test_dataset} <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
 
+
 # =============================================================================
 # Train the encoding model and predict the EEG test data
 # =============================================================================
-pred_eeg = train_model(args)
+reg = train_model(args)
+
 
 # =============================================================================
-# Test the encoding model on each test subject
+# Test the encoding model on THINGS1 each test subject
 # =============================================================================
 
 # Test subjects list
 test_subjs = [x for x in range(1, 51) if x != 6]
 
 # Get the encoding accuracy for each subject
-tot_accuracy = np.empty((49,100))
-for i, test_subj in enumerate(tqdm(test_subjs)):
-    accuracy, times = test_model(args, test_subj, pred_eeg)
+tot_accuracy = np.empty((len(test_subjs),100))
+for i, test_subj in enumerate(tqdm(test_subjs, desc='THINGS1 subjects')):
+    accuracy, times = test_model_THINGS1(args, test_subj)
     tot_accuracy[i] = accuracy
         
 # =============================================================================
