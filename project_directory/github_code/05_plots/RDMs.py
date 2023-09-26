@@ -40,7 +40,7 @@ for c in dreams_corrs:
 	RDMs.append(mean_corr)
 	del result, mean_corr
 RDMs = np.array(RDMs)
-print(RDMs.shape)
+print('The shape of RDMs:' , RDMs.shape, ' (number of dreams, number of images)')
 
 # Dream images list
 ZW_img_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
@@ -83,7 +83,7 @@ plt.xlim([0,int(len(dreams_corrs[:30])*8)])
 plt.ylim([0,int(len(dreams_corrs[:30]))])
 plt.xlabel('Images')
 plt.ylabel('Dreams')
-plt.title(f'RDMs')
+plt.title(f'unnormalized RDMs')
 
 fig.tight_layout()
 plt.show()
@@ -120,7 +120,7 @@ plt.xlim([0,len(dreams_corrs)])
 plt.ylim([0,len(dreams_corrs)])
 plt.xlabel('Images')
 plt.ylabel('Dreams')
-plt.title(f'max RDMs')
+plt.title(f'max normalized RDMs')
 
 fig.tight_layout()
 plt.show()

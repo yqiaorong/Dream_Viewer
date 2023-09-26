@@ -126,9 +126,12 @@ ZW_rem_list = os.listdir(ZW_img_dir)
 count = 0
 single_dream_imgs_idx = [count]
 for rem in ZW_rem_list:
-    ZW_img_list = os.listdir(os.path.join(ZW_img_dir, rem))
-    count += len(ZW_img_list)
-    single_dream_imgs_idx.append(count)
+    if rem.endswith('txt'):
+        pass
+    else:
+        ZW_img_list = os.listdir(os.path.join(ZW_img_dir, rem))
+        count += len(ZW_img_list)
+        single_dream_imgs_idx.append(count)
 
 for e, item in enumerate(dreams_eegs_names):
 

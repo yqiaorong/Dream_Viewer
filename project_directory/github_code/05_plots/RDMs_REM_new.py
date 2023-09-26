@@ -27,32 +27,38 @@ for key, val in vars(args).items():
 # Load correlation results
 # =============================================================================
 
+ZW_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+						   'Zhang_Wamsley')
+
 # Dream correlation scores list
-ZW_corr_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-						   'Zhang_Wamsley', 'REMs', 'results', 'correlation_scores_'+args.st)
+ZW_corr_dir = os.path.join(ZW_dir, 'REMs', 'results', 'correlation_scores_'+args.st)
 dreams_corrs = os.listdir(ZW_corr_dir)
 
 # Load correlation scores
+img_indice = []
 RDMs = []
 for c in dreams_corrs:
 	result = np.load(os.path.join(ZW_corr_dir, c), allow_pickle=True).item()
+	# Append indice
+	img_idx = result['corresponding_img_idx']
+	img_indice.append(img_idx)
+	# Append correlation scores
 	mean_corr = result['mean_correlations']
 	RDMs.append(mean_corr)
-	del result, mean_corr
+	del result, img_idx, mean_corr
 RDMs = np.array(RDMs)
 print(RDMs.shape)
 
-# # Dream images list
-# ZW_img_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-# 						  'Zhang_Wamsley', 'images')
-# dreams_imgs = os.listdir(ZW_img_dir)
-# dreams_imgs = [s[6:].split('_')[0] for s in dreams_imgs]
+# Dream images list
+ZW_img_dir = os.path.join(ZW_dir, 'REMs','images')
+dreams = os.listdir(ZW_img_dir)
+
 	
 # =============================================================================
 # Plot the full RDMs
 # =============================================================================
 
-fig = plt.figure(figsize=(10, 4))
+fig = plt.figure(figsize=(10, 3))
 im = plt.imshow(RDMs, cmap='viridis',
 				extent=[0, RDMs.shape[1], 0, RDMs.shape[0]], 
                 origin='lower', aspect='auto')
@@ -63,9 +69,10 @@ cbar.set_label('Values')
 for i in range(RDMs.shape[0]):
 	plt.plot([0, RDMs.shape[1]], [i,i], 'k--', lw=0.4)
 
+print(img_indice)
 # Vertical borders
-for i in range(RDMs.shape[0]):
-	plt.plot([int(i*8),int(i*8)], [0, RDMs.shape[0]], 'k--', lw=0.4)
+for img in img_indice:
+	plt.plot([int(img[-1]+1),int(img[-1]+1)], [0, RDMs.shape[0]], 'k--', lw=0.4)
 
 plt.xlabel('Images')
 plt.ylabel('Dreams')
@@ -78,23 +85,20 @@ plt.show()
 # =============================================================================
 
 # Get the maximum value among 8 images
-num_imgs = 8
 max_RDMs = np.empty((RDMs.shape[0], RDMs.shape[0]))
 for v in range(RDMs.shape[0]):
-    previous_cumu = 0
-    current_cumu = 0
-    for h in range(RDMs.shape[0]):
-        current_cumu += num_imgs
-        # print(f'({v},{h}): {previous_cumu}, {current_cumu}')
-        max_RDMs[v,h] = max(RDMs[v, previous_cumu:current_cumu])
-        previous_cumu += num_imgs
-    del previous_cumu, current_cumu
+	for h in range(RDMs.shape[0]):
+		# print(len(RDMs[v, img_indice[h][0]:int(img_indice[h][-1]+1)]))
+		# print(f'({v},{h}): {img_indice[h][0]}, {int(img_indice[h][-1]+1)}')
+		max_RDMs[v,h] = max(RDMs[v, img_indice[h][0]:int(img_indice[h][-1]+1)])
+		if h == v:
+			print(RDMs[v, img_indice[h][0]:int(img_indice[h][-1]+1)])
 
 # Normalization
 norm_max_RDMs = normalize(max_RDMs)
 
 # Plot
-fig = plt.figure(figsize=(8, 8))
+fig = plt.figure(figsize=(6, 5))
 im = plt.imshow(norm_max_RDMs, cmap='viridis',
 				extent=[0, RDMs.shape[0], 0, RDMs.shape[0]], 
                 origin='lower', aspect='auto')

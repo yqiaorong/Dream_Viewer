@@ -107,7 +107,7 @@ for p in img_partitions:
 	image_list = []
 	for root, dirs, files in os.walk(part_dir):
 		for file in files:
-			if file.endswith(".png"):
+			if file.endswith(".png") or file.endswith(".jpg"):
 				image_list.append(os.path.join(root,file))
 	image_list.sort()
 
