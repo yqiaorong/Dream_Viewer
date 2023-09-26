@@ -20,7 +20,6 @@ def train_scaler_pca(args):
     """
         
     import os
-    import pickle
     import numpy as np
     from tqdm import tqdm
     from sklearn.preprocessing import StandardScaler
@@ -32,7 +31,11 @@ def train_scaler_pca(args):
     ### Load the feature maps ###
     feats = []
     feats_all = []
+    # The dictionaries storing the dnn training feature maps in 3 stages
     fmaps_train = {}
+    fmaps_train_1 = {}
+    fmaps_train_2 = {}
+    # The directory of the dnn training feature maps
     fmaps_dir = os.path.join(args.project_dir, 'eeg_dataset','wake_data',
                              'THINGS_EEG2', 'dnn_feature_maps',
                              'full_feature_maps', args.dnn, 
@@ -64,29 +67,59 @@ def train_scaler_pca(args):
             feats_all.append(feats)
     if args.layers == 'all':
         fmaps_train[layer_names[0]] = np.asarray(feats_all)
+        print('The old fmaps train shape',fmaps_train[layer_names[0]].shape)
+        fmaps_train_1[layer_names[0]] = []
     elif args.layers == 'single':
         for l, dnn_layer in enumerate(layer_names):
             fmaps_train[dnn_layer] = np.squeeze(np.asarray(feats[l]))
-    
+            print('The old fmaps train shape',fmaps_train[dnn_layer].shape)
+            fmaps_train_1[dnn_layer] = []
+
     ### Train the models ###
     # Standardize the data
     scaler = []
     for l, dnn_layer in enumerate(layer_names):
         scaler.append(StandardScaler())
+        ## Partial fit
         # The number of subsets
         num_subset = 1654
         # The size of each subset
         chunk_size = 16540/num_subset
-        for i in tqdm(range(num_subset),desc='StandardScaler'):
+        for i in tqdm(range(num_subset),desc='StandardScaler training'):
             scaler[l].partial_fit(fmaps_train[dnn_layer][int(i*chunk_size):
                                                          int(i*chunk_size+
                                                              chunk_size)])
+        ## Partial transform
+        # The number of full features for each image
+        num_img = fmaps_train[dnn_layer].shape[0]
+        for i in tqdm(range(num_img), desc='StandardScaler transform'):
+            fmaps_train_1[dnn_layer].append(scaler[l].transform(
+                fmaps_train[dnn_layer][i].reshape(1,-1)))
+        ## Convert lists to array
+        # Create transitions directory
+        fmaps_train_dir = os.path.join(args.project_dir, 'eeg_dataset','wake_data',
+                             'THINGS_EEG2', 'dnn_feature_maps', 'transitions')
+        if os.path.isdir(fmaps_train_dir) == False:
+            os.makedirs(fmaps_train_dir)
+        fmaps_train_2[dnn_layer] = np.memmap(os.path.join(fmaps_train_dir, 
+                                                          'transition_data'+dnn_layer), 
+                                             dtype='float32', mode='w+', 
+                                             shape=fmaps_train[dnn_layer].shape)
+        # Write in the data
+        for i, features in enumerate(tqdm(fmaps_train_1[dnn_layer], desc='Lists to array')):
+            fmaps_train_2[dnn_layer][i,:] = features
+        print('middle feature maps shape',fmaps_train_2[dnn_layer].shape)
+    del fmaps_train, fmaps_train_1
+
     # Apply PCA
     pca = []
     for l, dnn_layer in enumerate(layer_names):
+        print('args.n_components',args.n_components)
         pca.append(KernelPCA(n_components=args.n_components, kernel='poly',
             degree=4, random_state=seed))
-        pca[l].fit(fmaps_train[dnn_layer])
+        pca[l].fit(fmaps_train_2[dnn_layer])
+        fmaps_train_2[dnn_layer] = pca[l].transform(fmaps_train_2[dnn_layer])
+        print('final feature maps shape',fmaps_train_2[dnn_layer].shape)
 
     ### Save the downsampled feature maps ###
     save_dir = os.path.join(args.project_dir,'eeg_dataset','wake_data','THINGS_EEG2',
@@ -95,15 +128,9 @@ def train_scaler_pca(args):
     file_name = 'pca_feature_maps_training'
     if os.path.isdir(save_dir) == False:
         os.makedirs(save_dir)
-        # Specify the file path
-        file_path = os.path.join(save_dir, file_name)
-        # Open the file for writing in binary mode ('wb')
-        with open(file_path, 'wb') as fp:
-            pickle.dump(fmaps_train, fp, protocol=5)
-    else:
-        pass
-
-    del fmaps_train
+    np.save(os.path.join(save_dir, file_name), fmaps_train_2)
+    del fmaps_train_2
+    
     return scaler, pca, all_layers, layer_names
 
 def apply_scaler_pca(args, img_category, scaler, pca):
@@ -142,6 +169,10 @@ def apply_scaler_pca(args, img_category, scaler, pca):
     elif args.dataset == 'Zhang_Wamsley':
         fmaps_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',args.dataset,
                                 'dnn_feature_maps','full_feature_maps',args.dnn,
+                                'pretrained-'+str(args.pretrained),img_category)
+    elif args.dataset == 'ZW_REMs':
+        fmaps_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data','Zhang_Wamsley',
+                                'REMs','dnn_feature_maps','full_feature_maps',args.dnn,
                                 'pretrained-'+str(args.pretrained),img_category)
     fmaps_list = os.listdir(fmaps_dir)
     fmaps_list.sort()
@@ -187,7 +218,11 @@ def apply_scaler_pca(args, img_category, scaler, pca):
     elif args.dataset == 'Zhang_Wamsley':
         save_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',args.dataset,
                                 'dnn_feature_maps','pca_feature_maps', args.dnn, 
-                                'pretrained-'+str(args.pretrained), 'layers-'+args.layers)        
+                                'pretrained-'+str(args.pretrained), 'layers-'+args.layers) 
+    elif args.dataset == 'ZW_REMs':
+        save_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data','Zhang_Wamsley',
+                                'REMs','dnn_feature_maps','pca_feature_maps', args.dnn, 
+                                'pretrained-'+str(args.pretrained), 'layers-'+args.layers)       
     if os.path.isdir(save_dir) == False:
         os.makedirs(save_dir)
     print(save_dir)

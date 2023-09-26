@@ -1,29 +1,31 @@
-"""Test the THINGS2 decoding model on Zhang_Wamsley
+"""Test the encoding model which is trained and tested on the same dream 
+dataset: Zhang & Wamsley.
 
 Parameters
 ----------
-project_dir : str
-	Directory of the project folder.
-dnn : str
+train_data_dir : str
+	Directory of the training data folder.
+dnn_feature_maps : str
     The DNN feature maps used to train the encoding model.
 test_dataset : str
     Used test dataset ('Zhang_Wamsley')
 """
 
+import os
 import argparse
 import numpy as np
 import pingouin as pg
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
-from encoding_func import train_model
+from encoding_func import model_ZW
+
 
 # =============================================================================
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--project_dir',
-					default='../project_directory', type=str)
+parser.add_argument('--project_dir',default='../project_directory', type=str)
 parser.add_argument('--dnn',default='alexnet',type=str)
 parser.add_argument('--test_dataset',default='Zhang_Wamsley',type=str)
 args = parser.parse_args()
@@ -32,66 +34,58 @@ print(f'>>> Test the encoding model on {args.test_dataset} <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
-
+	
+    
 # =============================================================================
-# Train the encoding model
-# =============================================================================
-reg = train_model(args)
-
-# =============================================================================
-# Test the encoding model on Zhang_Wamsley each dream
+# Match the EEG data with images
 # =============================================================================
 
-# # dream 
-# test_subjs = [x for x in range(1, 51) if x != 6]
+# Test dreams EEG list
+ZW_EEG_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+						  'Zhang_Wamsley', 'preprocessed_data')
+dreams_eegs = os.listdir(ZW_EEG_dir)
+dreams_eegs = [s[6:-4].replace('_', '') for s in dreams_eegs]
 
-# # Get the encoding accuracy for each subject
-# tot_accuracy = np.empty((len(test_subjs),100))
-# for i, test_subj in enumerate(tqdm(test_subjs, desc='THINGS1 subjects')):
-#     accuracy, times = test_model(args, test_subj)
-#     tot_accuracy[i] = accuracy
-        
-# # =============================================================================
-# # Plot the correlation results
-# # =============================================================================
+# Test dreams images list
+ZW_img_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+						  'Zhang_Wamsley', 'images')
+dreams_imgs = os.listdir(ZW_img_dir)
+dreams_imgs = [s[6:].split('_')[0] for s in dreams_imgs]
 
-# ### All subjects ###
-# plt.figure(1)
-# plt.plot([-.2, .8], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
-# # Set the plot colour spectum
-# cmap = "cividis"
-# colours = plt.colormaps[cmap](np.linspace(0,1,len(test_subjs)))
-# # Plot
-# for i in range(len(test_subjs)):
-#     plt.plot(times, tot_accuracy[i], color = colours[i], alpha=0.2)
-# plt.plot(times, np.mean(tot_accuracy,0), color='k', label='Correlation mean score')
-# plt.xlabel('Time (s)')
-# plt.xlim(left=-.2, right=.8)
-# plt.ylabel('Pearson\'s $r$')
-# plt.ylim(bottom=-.1, top=.3)
-# plt.title(f'Encoding accuracy on THINGS1 ({args.dnn_feature_maps})')
-# plt.legend(loc='best')
+# The list of indices of dreams with feature maps
+dreams_eegs_idx = [idx for idx, item in enumerate(dreams_eegs) if item in 
+                   dreams_imgs]
+print('The total number of dreams with feature maps: ', len(dreams_eegs_idx))
+print(dreams_eegs_idx)
 
-# ### Average with confidence interval ###
-# # Set random seed for reproducible results
-# seed = 20200220
-# # Set the confidence interval
-# ci = np.empty((2,len(times)))
-# # Plot
-# plt.figure(2)
-# plt.plot([-.2, .8], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
-# # Calculate the confidence interval
-# for i in range(len(times)):
-#     ci[:,i] = pg.compute_bootci(tot_accuracy[:,i], func='mean', seed=seed)
-# # Plot the results with confidence interval
-# plt.plot(times, np.mean(tot_accuracy,0), color='salmon', label='Confidence interval')
-# plt.fill_between(times, np.mean(tot_accuracy,0), ci[0], color='salmon', alpha=0.2)
-# plt.fill_between(times, np.mean(tot_accuracy,0), ci[1], color='salmon', alpha=0.2)
-# plt.xlabel('Time (s)')
-# plt.xlim(left=-.2, right=.8)
-# plt.ylabel('Pearson\'s $r$')
-# plt.ylim(bottom=-.1, top=.3)
-# plt.title(f'Encoding accuracy on THINGS1 ({args.dnn_feature_maps})')
-# plt.legend(loc='best')
+# The list of indices of dream images of dreams
+dreams_imgs_idx = []
+for idx in dreams_eegs_idx:
+	dreams_imgs_idx.append([i for i, item in enumerate(dreams_imgs) 
+						 if item == dreams_eegs[idx]])
+print('The number of dreams in img list:', len(dreams_imgs_idx))
 
-# plt.show()
+
+# =============================================================================
+# Train the encoding model, predict the EEG test data, and test the model
+# =============================================================================
+t = 2000
+scores = model_ZW(args, dreams_eegs_idx, dreams_imgs_idx, t)
+mean_scores = np.mean(scores, 0)
+
+
+# =============================================================================
+# Plot the correlation results
+# =============================================================================
+times = np.linspace(-int(t/100),0,t)
+
+plt.figure(figsize=(10,4))
+plt.plot([-int(t/100), 0], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
+plt.plot(times, mean_scores, color = 'salmon', label='Correlation mean score')
+plt.xlabel('Time (s)')
+plt.xlim(left=-int(t/100), right=0)
+plt.ylabel('Pearson\'s $r$')
+plt.ylim(bottom=-.1, top=.1)
+plt.title(f'Encoding accuracy on Zhang & Wamsley (alexnet)')
+plt.legend(loc='best')
+plt.show()

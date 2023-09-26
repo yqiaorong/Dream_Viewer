@@ -1,4 +1,5 @@
-"""Extract and save the AlexNet feature maps of the Zhang & Wamsley images.
+"""Extract and save the AlexNet feature maps of the Zhang & Wamsley REM
+dreams images.
 
 Parameters
 ----------
@@ -98,37 +99,35 @@ centre_crop = trn.Compose([
 # Extract the feature maps of (1) dreams.
 
 # The image directory
-img_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',
-						   'Zhang_Wamsley','images')
-# The list of images
-image_list = []
-for root, dirs, files in os.walk(img_dir):
-	for file in files:
-		if file.startswith('dream'):
-			image_list.append(os.path.join(root,file))
-image_list.sort()
+img_set_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',
+						   'Zhang_Wamsley','REMs','images')
+img_partitions = os.listdir(img_set_dir)
+for p in img_partitions:
+	part_dir = os.path.join(img_set_dir, p)
+	image_list = []
+	for root, dirs, files in os.walk(part_dir):
+		for file in files:
+			if file.endswith(".png"):
+				image_list.append(os.path.join(root,file))
+	image_list.sort()
 
-# The list of image names
-img_names = os.listdir(img_dir)
-# Select only png
-img_names = [i for i in img_names if i.startswith('dream')]
+	# Create the saving directory if not existing
+	save_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',
+						    'Zhang_Wamsley','REMs','dnn_feature_maps',
+							'full_feature_maps','alexnet',
+						 'pretrained-'+str(args.pretrained), p)
+	if os.path.isdir(save_dir) == False:
+		os.makedirs(save_dir)
 
-# Create the saving directory if not existing
-save_dir = os.path.join(args.project_dir,'eeg_dataset','dream_data',
-						'Zhang_Wamsley','dnn_feature_maps','full_feature_maps',
-						'alexnet','pretrained-'+str(args.pretrained), 'dreams')
-if os.path.isdir(save_dir) == False:
-	os.makedirs(save_dir)
-
-# Extract and save the feature maps
-for i, image in enumerate(tqdm(image_list, desc='dreams')):
-	img = Image.open(image).convert('RGB')
-	input_img = V(centre_crop(img).unsqueeze(0))
-	if torch.cuda.is_available():
-		input_img=input_img.cuda()
-	x = model.forward(input_img)
-	feats = {}
-	for f, feat in enumerate(x):
-		feats[model.feat_list[f]] = feat.data.cpu().numpy()
-	file_name = img_names[i][:-4]
-	np.save(os.path.join(save_dir, file_name), feats)
+	# Extract and save the feature maps
+	for i, image in enumerate(tqdm(image_list, desc=p)):
+		img = Image.open(image).convert('RGB')
+		input_img = V(centre_crop(img).unsqueeze(0))
+		if torch.cuda.is_available():
+			input_img=input_img.cuda()
+		x = model.forward(input_img)
+		feats = {}
+		for f, feat in enumerate(x):
+			feats[model.feat_list[f]] = feat.data.cpu().numpy()
+		file_name = p+'_'+str(i)
+		np.save(os.path.join(save_dir, file_name), feats)

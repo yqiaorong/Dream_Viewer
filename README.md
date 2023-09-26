@@ -48,7 +48,7 @@ The files ended with '_func.py' have no needs to be run.
 
 ### 01_eeg_preprocessing
 
-* run_all_scripts.py (This preprocesses all datasets, including THINGS1, THINGS2, Zhang & Wamsley)
+* run_all_scripts.py (This preprocesses all datasets, including THINGS1, THINGS2, Zhang & Wamsley.)
 
 * DEED.py (This file preprocesses one specific subject of DEED.)
 
@@ -60,10 +60,20 @@ The files ended with '_func.py' have no needs to be run.
 
 ### 03_validation_test
 
-* encoding.py (This file train and test the EEG encoding model)
+* encoding.py (This file trains and tests the EEG encoding model.)
+
+* corr_ZW_s.py (This file computes the correlation scores of dreams in ZHang & Wamsley dataset using the 'spatial correlation method'.)
 
 ### 04_dnn_fmaps
 
-* alexnet_THINGS.py (This file extracts dnn alexnet feature maps from THINGS images)
+* alexnet_THINGS.py (This file extracts dnn alexnet feature maps from THINGS images.)
 
-* alexnet_SCIP.py (This file extracts dnn alexnet feature maps from SCIP images)
+* alexnet_SCIP.py (This file extracts dnn alexnet feature maps from SCIP images.)
+
+* alexnet_ZW.py (This file extracts dnn alexnet feature maps from Zhang & Wamsley images.)
+
+* pca.py (This file applies StandardScaler and PCA on the full feature maps.)
+
+### 05_plots
+
+* corr_plot_s.py (This file plots the correlation scores for individual dream.)

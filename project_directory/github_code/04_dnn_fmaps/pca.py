@@ -19,6 +19,7 @@ n_components : int
 	Number of DNN feature maps PCA components retained.
 """
 
+import os
 import argparse
 from pca_func import train_scaler_pca, apply_scaler_pca
 
@@ -58,4 +59,11 @@ if args.dataset == 'SCIP':
     for img_category in img_categories:
         apply_scaler_pca(args, img_category, scaler, pca)
 if args.dataset == 'Zhang_Wamsley':
-     apply_scaler_pca(args, 'dreams', scaler, pca)
+    apply_scaler_pca(args, 'dreams', scaler, pca)
+if args.dataset == 'ZW_REMs':
+    dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 'Zhang_Wamsley',
+                    'REMs','dnn_feature_maps', 'full_feature_maps',args.dnn,
+                    'pretrained-'+str(args.pretrained))
+    img_categories = os.listdir(dir)
+    for img_category in img_categories:
+        apply_scaler_pca(args, img_category, scaler, pca)

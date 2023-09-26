@@ -16,7 +16,7 @@ import pingouin as pg
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
-from encoding_func import train_model, test_model_THINGS1
+from encoding_func import train_model_THINGS, test_model_THINGS
 
 # =============================================================================
 # Input arguments
@@ -37,7 +37,7 @@ for key, val in vars(args).items():
 # =============================================================================
 # Train the encoding model and predict the EEG test data
 # =============================================================================
-reg = train_model(args)
+pred_eeg = train_model_THINGS(args)
 
 
 # =============================================================================
@@ -50,7 +50,7 @@ test_subjs = [x for x in range(1, 51) if x != 6]
 # Get the encoding accuracy for each subject
 tot_accuracy = np.empty((len(test_subjs),100))
 for i, test_subj in enumerate(tqdm(test_subjs, desc='THINGS1 subjects')):
-    accuracy, times = test_model_THINGS1(args, test_subj)
+    accuracy, times = test_model_THINGS(args, pred_eeg, test_subj)
     tot_accuracy[i] = accuracy
         
 # =============================================================================
@@ -71,7 +71,7 @@ plt.xlabel('Time (s)')
 plt.xlim(left=-.2, right=.8)
 plt.ylabel('Pearson\'s $r$')
 plt.ylim(bottom=-.1, top=.3)
-plt.title(f'Encoding accuracy on THINGS1 ({args.dnn_feature_maps})')
+plt.title(f'Encoding accuracy on THINGS1 (alexnet)')
 plt.legend(loc='best')
 
 ### Average with confidence interval ###
@@ -93,7 +93,7 @@ plt.xlabel('Time (s)')
 plt.xlim(left=-.2, right=.8)
 plt.ylabel('Pearson\'s $r$')
 plt.ylim(bottom=-.1, top=.3)
-plt.title(f'Encoding accuracy on THINGS1 ({args.dnn_feature_maps})')
+plt.title(f'Encoding accuracy on THINGS1 (alexnet)')
 plt.legend(loc='best')
 
 plt.show()
