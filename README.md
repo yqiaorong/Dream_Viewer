@@ -77,3 +77,15 @@ The files ended with '_func.py' have no needs to be run.
 ### 05_plots
 
 * corr_plot_s.py (This file plots the correlation scores for individual dream.)
+
+* RDMs.py (This file plots the RDMs of dreams with feature maps.)
+
+* RDMs_REM.py (This file plots the RDMs of REM dreams with feature maps.)
+
+### 06_ZW
+
+No needs to run the following scripts.
+
+* sorting_ZW.py (THis file sorts all metadata of dreams with feature maps.)
+
+* sorting_ZW_REMs.py (THis file sorts all metadata of REM dreams with feature maps.)
