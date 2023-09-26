@@ -9,8 +9,7 @@ import pandas as pd
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--project_dir',
-					default='../project_directory', type=str)
+parser.add_argument('--project_dir', default='../project_directory', type=str)
 args = parser.parse_args()
 
 # =============================================================================
@@ -121,6 +120,8 @@ for id in Reports['Case ID']:
 reports_df = pd.DataFrame({'Case ID': IDs, 'Text of Report': Reports['Text of Report']})
 REM_df = reports_df[reports_df['Case ID'].isin(REM_ID)]
 del Reports, reports_df
+
+REM_df['CaseID'] = REMID
 
 # Save the REM dreams reports
 REM_df.to_excel(os.path.join(ZW_dir, 'REMs', 'REM_reports.xlsx'), index=False)

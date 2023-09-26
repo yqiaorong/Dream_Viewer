@@ -104,8 +104,6 @@ correlations = test_model_ZW_spatial(args, pred_eeg, selected_imgs_idx)
 # plt.title(f'Encoding accuracy of all 8 images')
 # plt.legend(loc='best')
 
-
-    
 times = np.linspace(-20, 0, 2000)
 for i in range(len(selected_imgs_idx)):
     _ = plot_single(args, times, correlations, i, dreams_eegs[args.dream_idx])

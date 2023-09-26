@@ -28,8 +28,8 @@ for key, val in vars(args).items():
 # =============================================================================
 
 # Dream correlation scores list
-ZW_corr_dir = os.path.join(args.project_dir, 'results', 'Zhang_Wamsley','REMs',
-						  'correlation_scores_'+args.st)
+ZW_corr_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+						   'Zhang_Wamsley', 'REMs', 'results', 'correlation_scores_'+args.st)
 dreams_corrs = os.listdir(ZW_corr_dir)
 
 # Load correlation scores
@@ -42,11 +42,11 @@ for c in dreams_corrs:
 RDMs = np.array(RDMs)
 print(RDMs.shape)
 
-# Dream images list
-ZW_img_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-						  'Zhang_Wamsley', 'images')
-dreams_imgs = os.listdir(ZW_img_dir)
-dreams_imgs = [s[6:].split('_')[0] for s in dreams_imgs]
+# # Dream images list
+# ZW_img_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+# 						  'Zhang_Wamsley', 'images')
+# dreams_imgs = os.listdir(ZW_img_dir)
+# dreams_imgs = [s[6:].split('_')[0] for s in dreams_imgs]
 	
 # =============================================================================
 # Plot the full RDMs
@@ -95,7 +95,7 @@ norm_max_RDMs = normalize(max_RDMs)
 
 # Plot
 fig = plt.figure(figsize=(8, 8))
-im = plt.imshow(max_RDMs, cmap='viridis',
+im = plt.imshow(norm_max_RDMs, cmap='viridis',
 				extent=[0, RDMs.shape[0], 0, RDMs.shape[0]], 
                 origin='lower', aspect='auto')
 cbar = plt.colorbar(im)

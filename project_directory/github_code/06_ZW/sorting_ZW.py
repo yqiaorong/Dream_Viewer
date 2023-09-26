@@ -9,8 +9,7 @@ from collections import OrderedDict
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--project_dir',
-					default='../project_directory', type=str)
+parser.add_argument('--project_dir', default='../project_directory', type=str)
 args = parser.parse_args()
 
 # =============================================================================
@@ -30,10 +29,10 @@ ZW_EEG_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data',
 dreams_eegs = os.listdir(ZW_EEG_dir)
 dreams_eegs = [s[6:-4].replace('_', '') for s in dreams_eegs]
 
-# Load Reports
-ZW_records_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+# Load Records
+ZW_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
 						  'Zhang_Wamsley')
-report = pd.read_csv(os.path.join(ZW_records_dir, 'Records.csv')) 
+report = pd.read_csv(os.path.join(ZW_dir, 'Records.csv')) 
 
 CaseID = []
 for s in report['Case ID']:
@@ -98,5 +97,6 @@ for idx, row in df.iterrows():
         num_occur.append('nah')
 df['number_of_images'] = num_occur
 
+# Save the dataframe
 df.to_excel(os.path.join(args.project_dir, 'results', 'Zhang_Wamsley', 
                          'df.xlsx'), index=False)

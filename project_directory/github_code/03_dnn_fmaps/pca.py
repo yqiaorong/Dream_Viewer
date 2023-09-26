@@ -7,7 +7,7 @@ Parameters
 project_dir : str
 	Directory of the project folder.
 dataset : str
-    Used dataset (THINGS_EEG2), ('SCIP') or ('Zhang_Wamsley').
+    Used dataset (THINGS_EEG2), ('SCIP'), ('Zhang_Wamsley') or ('ZW_REMs').
 dnn : str
 	Used DNN among 'alexnet'.
 pretrained : bool

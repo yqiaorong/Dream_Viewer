@@ -13,7 +13,6 @@ test_dataset : str
 import os
 import argparse
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 import pingouin as pg
 from sklearn.linear_model import LinearRegression
@@ -30,7 +29,7 @@ parser.add_argument('--dnn',default='alexnet',type=str)
 parser.add_argument('--test_dataset',default='Zhang_Wamsley',type=str)
 args = parser.parse_args()
 
-print(f'>>> Test the encoding model on {args.test_dataset} <<<')
+print(f'>>> Test the encoding model on Zhang & Wamsley <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -91,96 +90,78 @@ reg = LinearRegression().fit(dnn_fmaps_train['all_layers'],eeg_data_train)
 # =============================================================================
 
 ### Load the test dream DNN feature maps ###
-# Load the test DNN feature maps directory
-dnn_test_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-                                args.test_dataset, 'dnn_feature_maps', 'pca_feature_maps', 
-                                args.dnn, 'pretrained-True', 'layers-all')
-# Load the test DNN feature maps (images, 3000)
-dnn_fmaps_test = np.load(os.path.join(dnn_test_dir,'pca_feature_maps_dreams.npy'
-                        ), allow_pickle=True).item()
+ZW_rem_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+                            args.test_dataset, 'REMs')
 
-### Predict the EEG test data using the encoding model ###
-# Predict the test EEG data : (images,16)
-pred_eeg_data_test = reg.predict(dnn_fmaps_test['all_layers'])
-print('pred eeg data test shape: ', pred_eeg_data_test.shape)
+# Load the test DNN feature maps directory
+dnn_test_dir = os.path.join(ZW_rem_dir, 'dnn_feature_maps', 
+                            'pca_feature_maps', args.dnn, 'pretrained-True', 
+                            'layers-all')
+dnn_test_list = os.listdir(dnn_test_dir)
+# Load the test DNN feature maps 
+REM_pred_eeg = []
+for fmap in dnn_test_list:
+    dnn_fmaps_test = np.load(os.path.join(dnn_test_dir,fmap,
+                            ), allow_pickle=True).item()
+    # Predict the EEG test data using the encoding model 
+    pred_eeg_data_test = reg.predict(dnn_fmaps_test['all_layers'])
+    REM_pred_eeg.append(pred_eeg_data_test)
+    del pred_eeg_data_test
+REM_pred_eeg = np.concatenate(REM_pred_eeg, axis=0)
+print('pred eeg shape: ', REM_pred_eeg.shape)
 
 
 # =============================================================================
-# Load only REM sleeps
+# Compute the correlation scores for one dream
 # =============================================================================	
-df = pd.read_excel('../project_directory/results/Zhang_Wamsley/df.xlsx')
 
-# Select only REMs
-df_REM = df[df['sleep_stages'] == 5]
-del df
+# Test dreams EEG list
+ZW_EEG_dir = os.path.join(ZW_rem_dir, 'preprocessed_data')
+dreams_eegs_names = os.listdir(ZW_EEG_dir)
 
-# Select only REMs with images
-df_REM_nonah = df_REM[df_REM['dreams_imgs'] != 'nah']
-del df_REM
+# Test dreams image list
+ZW_img_dir = os.path.join(ZW_rem_dir, 'images')
+ZW_rem_list = os.listdir(ZW_img_dir)
 
-# Get REM dreams eeg indices
-eeg_idx = np.unique(df_REM_nonah['dreams_idx'])
+count = 0
+single_dream_imgs_idx = [count]
+for rem in ZW_rem_list:
+    ZW_img_list = os.listdir(os.path.join(ZW_img_dir, rem))
+    count += len(ZW_img_list)
+    single_dream_imgs_idx.append(count)
 
-# Get REM dreams images indices
-img_idx = np.unique(df_REM_nonah['dreams_imgs_idx']).astype(int)
+for e, item in enumerate(dreams_eegs_names):
 
-# Only keep the eeg indices and images indices columns
-idx_df = df_REM_nonah[['dreams_idx', 'dreams_imgs_idx']]
-del df_REM_nonah
-idx_df.to_excel(os.path.join(args.project_dir, 'results', 'Zhang_Wamsley', 
-                         'REMs_df.xlsx'), index=False)
+    # Set the cropped time points
+    crop_t = 1000
+    # The time points
+    times = np.linspace(-int(crop_t/100), 0, crop_t)
 
-# Select predicted REMs EEG data
-REM_pred_eeg = pred_eeg_data_test[img_idx]
-del pred_eeg_data_test
-print('REM pred eeg data test shape: ', REM_pred_eeg.shape)
+    # The correlation scores (all images, times)
+    corr = []
+    # The correlation scores (all images)
+    mean_corr = []
 
+    # Iterate over images
+    for i in tqdm(range(REM_pred_eeg.shape[0]), desc='correlation'):
+        s, m = corr_s(args, REM_pred_eeg, e, i, crop_t)
+        corr.append(s)
+        mean_corr.append(m)
+    corr = np.array(corr)
+    mean_corr = np.array(mean_corr)
 
-# # =============================================================================
-# # Compute the correlation scores for one dream
-# # =============================================================================	
+    # Save the all correlation results of one dream to the dictionary
+    results = {}
+    results['corresponding_img_idx'] = list(range(single_dream_imgs_idx[e],single_dream_imgs_idx[int(e+1)]))
+    results['correlations'] = corr
+    results['mean_correlations'] = mean_corr
+    results['times'] = times
 
-# for e in eeg_idx:
+    # Create the saving directory
+    save_dir = os.path.join(ZW_rem_dir, 'results', 'correlation_scores_s')
+    if os.path.isdir(save_dir) == False:
+        os.makedirs(save_dir)
+    file_name = item[6:]
+    np.save(os.path.join(save_dir, file_name), results)
 
-#     # Test dreams EEG list
-#     ZW_EEG_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-#                             'Zhang_Wamsley', 'preprocessed_data')
-#     dreams_eegs_names = os.listdir(ZW_EEG_dir)
-    
-#     # Get the indices of images for each REM dream
-#     single_dream_imgs_idx = list(idx_df[idx_df['dreams_idx'] == e]['dreams_imgs_idx'])
-#     print(single_dream_imgs_idx)
-
-#     # Set the cropped time points
-#     crop_t = 1000
-#     # The time points
-#     times = np.linspace(-int(crop_t/100), 0, crop_t)
-
-#     # The correlation scores (all images, times)
-#     corr = []
-#     # The correlation scores (all images)
-#     mean_corr = []
-
-#     # Iterate over images
-#     for i in tqdm(range(REM_pred_eeg.shape[0]), desc='correlation'):
-#         s, m = corr_s(args, REM_pred_eeg, e, i, crop_t)
-#         corr.append(s)
-#         mean_corr.append(m)
-#     corr = np.array(corr)
-#     mean_corr = np.array(mean_corr)
-
-#     # Save the all correlation results of one dream to the dictionary
-#     results = {}
-#     results['corresponding_img_idx'] = single_dream_imgs_idx
-#     results['correlations'] = corr
-#     results['mean_correlations'] = mean_corr
-#     results['times'] = times
-
-#     # Create the saving directory
-#     save_dir = os.path.join(args.project_dir,'results',args.test_dataset,'REMs', 'correlation_scores_s')
-#     if os.path.isdir(save_dir) == False:
-#         os.makedirs(save_dir)
-#     file_name = dreams_eegs_names[e][6:]
-#     np.save(os.path.join(save_dir, file_name), results)
-
-#     del single_dream_imgs_idx, corr, mean_corr, results
+    del corr, mean_corr, results

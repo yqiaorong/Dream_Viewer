@@ -1,4 +1,4 @@
-def corr_s(args, pred_eeg_data_test, eeg_idx, img_idx, crop_t):
+def corr_s(args, pred_eeg_data_test, eeg_idx, img_idx, crop_t, REM=False):
     """The function tests the encoding model by correlating the predicted EEG 
     test data with real EEG test data. This method computes the correlation
     scores by applying the predicted data on each time point in the dream.
@@ -31,8 +31,12 @@ def corr_s(args, pred_eeg_data_test, eeg_idx, img_idx, crop_t):
     
     ### Load the test EEG data ###
     # Load the Zhang_Wamsley test EEG directory
-    eeg_test_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data',
+    if REM == False:
+        eeg_test_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data',
                                     args.test_dataset, 'preprocessed_data')
+    else:
+        eeg_test_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data',
+                                    args.test_dataset, 'REMs','preprocessed_data')
     eeg_test_list = os.listdir(eeg_test_dir)
     # Load the Zhang_Wamsley test EEG data (16, total time)
     eeg_data_test = np.load(os.path.join(eeg_test_dir, eeg_test_list[eeg_idx]),
