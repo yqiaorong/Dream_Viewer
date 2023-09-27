@@ -146,7 +146,7 @@ for e, item in enumerate(dreams_eegs_names):
     mean_corr = []
 
     # Iterate over images
-    for i in tqdm(range(REM_pred_eeg.shape[0]), desc='correlation'):
+    for i in tqdm(range(REM_pred_eeg.shape[0]), desc=f'correlation dream {i}'):
         s, m = corr_s(args, REM_pred_eeg, e, i, crop_t)
         corr.append(s)
         mean_corr.append(m)
