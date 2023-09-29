@@ -117,3 +117,61 @@ def corr_t(args, pred_eeg_data_test, eeg_idx, img_idx, crop_t):
 
     ### Output ###
     return corr_score, mean_score
+
+def fs_train_test(args, feature_maps_train, eeg_data_train):
+    """The function reduces the dimension of features, trains and tests the 
+    encoding model. 
+
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+    feature_maps_train: array with shape (samples, features)
+        The dnn training feature maps. 
+    eeg_data_train : array with shape (samples, 1)
+        The training EEG data.
+
+    Returns
+    ----------
+    pred_eeg : array with shape (samples,)
+        The predicted EEG data. 
+    """
+    
+    import os
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+    from sklearn.feature_selection import SelectKBest, f_regression
+
+    ### Feature selection ###
+    num_feat = 300
+    # Feature selection model
+    best_feat = SelectKBest(f_regression, k=num_feat).fit(feature_maps_train, 
+                                                          eeg_data_train)
+    # Transfer the training features
+    train = best_feat.transform(feature_maps_train)
+    del feature_maps_train
+    ### Train the encoding model ###
+    reg = LinearRegression().fit(train, eeg_data_train)
+    
+    ### Load the test dream DNN feature maps ###
+    ZW_rem_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
+                                args.test_dataset, 'REMs')
+    # Load the test DNN feature maps directory
+    dnn_test_dir = os.path.join(ZW_rem_dir, 'dnn_feature_maps', 
+                                'pca_feature_maps', args.dnn, 'pretrained-True', 
+                                'layers-all')
+    dnn_test_list = os.listdir(dnn_test_dir)
+    # Load the test DNN feature maps 
+    pred_eeg = []
+    for fmap in dnn_test_list:
+        dnn_fmaps_test = np.load(os.path.join(dnn_test_dir,fmap,
+                                ), allow_pickle=True).item()
+        # Feature selection
+        dnn_fmaps_test['all_layers'] = best_feat.transform(dnn_fmaps_test['all_layers'])
+        # Predict the EEG test data using the encoding model 
+        test = reg.predict(dnn_fmaps_test['all_layers'])
+        pred_eeg.append(test)
+        del dnn_fmaps_test['all_layers'], test
+    pred_eeg = np.array(pred_eeg).ravel()
+    
+    return pred_eeg

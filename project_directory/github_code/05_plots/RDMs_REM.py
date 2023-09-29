@@ -1,7 +1,6 @@
 import os
 import argparse
 import numpy as np
-import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import normalize
 
@@ -11,11 +10,11 @@ from sklearn.preprocessing import normalize
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--project_dir',default='../project_directory', type=str)
+parser.add_argument('--project_dir',default='../project_directory',type=str)
 parser.add_argument('--dnn',default='alexnet',type=str)
 parser.add_argument('--test_dataset',default='Zhang_Wamsley',type=str)
 parser.add_argument('--dream_idx',default=0, type=int)
-parser.add_argument('--st',default='s', type=str)
+parser.add_argument('--feature_selection',default=False,type=bool)
 args = parser.parse_args()
 
 print(f'>>> Plot the RDMs of {args.test_dataset} <<<')
@@ -27,11 +26,13 @@ for key, val in vars(args).items():
 # Load correlation results
 # =============================================================================
 
-ZW_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-						   'Zhang_Wamsley')
+ZW_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 'Zhang_Wamsley')
 
 # Dream correlation scores list
-ZW_corr_dir = os.path.join(ZW_dir, 'REMs', 'results', 'correlation_scores_'+args.st)
+if args.feature_selection == True:
+	ZW_corr_dir = os.path.join(ZW_dir, 'REMs', 'results', 'correlation_scores_sf')
+else:
+    ZW_corr_dir = os.path.join(ZW_dir, 'REMs', 'results', 'correlation_scores_s')
 dreams_corrs = os.listdir(ZW_corr_dir)
 
 # Load correlation scores
@@ -97,7 +98,24 @@ for v in range(RDMs.shape[0]):
 # Normalization
 norm_max_RDMs = normalize(max_RDMs)
 
-# Plot
+# Plot original maximum RDMs
+fig = plt.figure(figsize=(6, 5))
+im = plt.imshow(max_RDMs, cmap='viridis',
+				extent=[0, RDMs.shape[0], 0, RDMs.shape[0]], 
+                origin='lower', aspect='auto')
+cbar = plt.colorbar(im)
+cbar.set_label('Values')
+
+plt.xlim([0,RDMs.shape[0]])
+plt.ylim([0,RDMs.shape[0]])
+plt.xlabel('Images')
+plt.ylabel('Dreams')
+plt.title(f'max REMs RDMs')
+
+fig.tight_layout()
+plt.show()
+
+# Plot normalized maximum RDMs
 fig = plt.figure(figsize=(6, 5))
 im = plt.imshow(norm_max_RDMs, cmap='viridis',
 				extent=[0, RDMs.shape[0], 0, RDMs.shape[0]], 
@@ -109,7 +127,7 @@ plt.xlim([0,RDMs.shape[0]])
 plt.ylim([0,RDMs.shape[0]])
 plt.xlabel('Images')
 plt.ylabel('Dreams')
-plt.title(f'max REMs RDMs')
+plt.title(f'normalized max REMs RDMs')
 
 fig.tight_layout()
 plt.show()

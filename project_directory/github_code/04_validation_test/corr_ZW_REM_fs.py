@@ -2,7 +2,7 @@
 
 Parameters
 ----------
-train_data_dir : str
+project_dir : str
 	Directory of the training data folder.
 dnn_feature_maps : str
     The DNN feature maps used to train the encoding model.
@@ -15,8 +15,11 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 import pingouin as pg
+from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LinearRegression
-from corr_func import corr_s
+from sklearn.model_selection import StratifiedKFold
+from sklearn.feature_selection import SelectKBest, f_regression
+from corr_func import corr_s, fs_train_test
 
 
 # =============================================================================
@@ -29,7 +32,7 @@ parser.add_argument('--dnn',default='alexnet',type=str)
 parser.add_argument('--test_dataset',default='Zhang_Wamsley',type=str)
 args = parser.parse_args()
 
-print(f'>>> Test the encoding model on Zhang & Wamsley <<<')
+print(f'>>> Test the encoding model on Zhang & Wamsley with feature selection <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -78,11 +81,7 @@ for train_subj in tqdm(range(1,11), desc='THINGS2 subjects'):
 # Average the training EEG data across subjects : (16540,16)
 eeg_data_train = np.mean(eeg_data_train,0)
 # Delete unused channel names
-del train_ch_names
-
-### Train the encoding model ###
-# Train the encoding models
-reg = LinearRegression().fit(dnn_fmaps_train['all_layers'],eeg_data_train)
+del train_ch_names                                           
 
 
 # =============================================================================
@@ -93,21 +92,12 @@ reg = LinearRegression().fit(dnn_fmaps_train['all_layers'],eeg_data_train)
 ZW_rem_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
                             args.test_dataset, 'REMs')
 
-# Load the test DNN feature maps directory
-dnn_test_dir = os.path.join(ZW_rem_dir, 'dnn_feature_maps', 
-                            'pca_feature_maps', args.dnn, 'pretrained-True', 
-                            'layers-all')
-dnn_test_list = os.listdir(dnn_test_dir)
-# Load the test DNN feature maps 
 REM_pred_eeg = []
-for fmap in dnn_test_list:
-    dnn_fmaps_test = np.load(os.path.join(dnn_test_dir,fmap,
-                            ), allow_pickle=True).item()
-    # Predict the EEG test data using the encoding model 
-    pred_eeg_data_test = reg.predict(dnn_fmaps_test['all_layers'])
-    REM_pred_eeg.append(pred_eeg_data_test)
-    del pred_eeg_data_test
-REM_pred_eeg = np.concatenate(REM_pred_eeg, axis=0)
+for ch in range(eeg_data_train.shape[1]):
+    pred_eeg = fs_train_test(args, dnn_fmaps_train['all_layers'], eeg_data_train[:,ch])
+    REM_pred_eeg.append(pred_eeg)
+    del pred_eeg
+REM_pred_eeg = np.array(REM_pred_eeg).transpose()
 print('pred eeg shape: ', REM_pred_eeg.shape)
 
 
@@ -146,7 +136,7 @@ for e, item in enumerate(dreams_eegs_names):
     mean_corr = []
 
     # Iterate over images
-    for i in tqdm(range(REM_pred_eeg.shape[0]), desc=f'correlation dream {i}'):
+    for i in tqdm(range(REM_pred_eeg.shape[0]), desc=f'correlation dream'):
         s, m = corr_s(args, REM_pred_eeg, e, i, crop_t)
         corr.append(s)
         mean_corr.append(m)
@@ -161,7 +151,7 @@ for e, item in enumerate(dreams_eegs_names):
     results['times'] = times
 
     # Create the saving directory
-    save_dir = os.path.join(ZW_rem_dir, 'results', 'correlation_scores_s')
+    save_dir = os.path.join(ZW_rem_dir, 'results', 'correlation_scores_sf')
     if os.path.isdir(save_dir) == False:
         os.makedirs(save_dir)
     file_name = item[6:]
