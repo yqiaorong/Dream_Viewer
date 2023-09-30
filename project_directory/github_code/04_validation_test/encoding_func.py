@@ -152,43 +152,28 @@ def train_model_THINGS(args):
         # Reshape the training EEG data
         # THINGS_EEG1 (16540, 17 x 100) / Zhang_Wamsley (16540, 16 x 100)
         data = np.reshape(data, (data.shape[0],-1))
-        print(data.shape)
         eeg_data_train.append(data)
         del data
     # Average the training EEG data across subjects
     # THINGS_EEG1 (16540, 17 x 100) / Zhang_Wamsley (16540, 16 x 100)
     eeg_data_train = np.mean(eeg_data_train,0)
-    # Remove the channel name 'POz'
-    if args.test_dataset == 'Zhang_Wamsley':
-        train_ch_names.pop(12)
-    else:
-        pass
 
     ### Train the encoding model ###
     # Train the encoding models
     reg = LinearRegression().fit(dnn_fmaps_train['all_layers'],eeg_data_train)
 
     ### Load the test DNN feature maps ###
-    if args.test_dataset == 'THINGS_EEG1': 
-        # Load the test DNN feature maps directory
-        dnn_parent_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
-                                    'THINGS_EEG2', 'dnn_feature_maps', 'pca_feature_maps', 
-                                    args.dnn, 'pretrained-True', 'layers-all')
-        # Load the test DNN feature maps (images,3000)
-        dnn_fmaps_test = np.load(os.path.join(dnn_parent_dir, 'pca_feature_maps_test.npy'
-                                ), allow_pickle=True).item()
-    elif args.test_dataset == 'Zhang_Wamsley':
-        # Load the test DNN feature maps directory
-        dnn_parent_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-                                    args.test_dataset, 'dnn_feature_maps', 'pca_feature_maps', 
-                                    args.dnn, 'pretrained-True', 'layers-all')
-        # Load the test DNN feature maps (images,3000)
-        dnn_fmaps_test = np.load(os.path.join(dnn_parent_dir,'pca_feature_maps_dreams.npy'
-                                            ), allow_pickle=True).item()
+    # Load the test DNN feature maps directory
+    dnn_parent_dir = os.path.join(args.project_dir, 'eeg_dataset', 'wake_data', 
+                                'THINGS_EEG2', 'dnn_feature_maps', 'pca_feature_maps', 
+                                args.dnn, 'pretrained-True', 'layers-all')
+    # Load the test DNN feature maps (images,3000)
+    dnn_fmaps_test = np.load(os.path.join(dnn_parent_dir, 'pca_feature_maps_test.npy'
+                            ), allow_pickle=True).item()
 
     ### Predict the EEG test data using the encoding model ###
     # Predict the test EEG data 
-    # THINGS_EEG1 (images, 17 x 15) / Zhang_Wamsley (images, 16 x 100)
+    # THINGS_EEG1 (images, 17 x 15) 
     pred_eeg_data_test = reg.predict(dnn_fmaps_test['all_layers'])
 
     ### Output ###
@@ -336,8 +321,6 @@ def model_ZW(args, dreams_eegs_idx, dreams_imgs_idx, crop_t):
 
     ### Output ###
     return scores
-
-
 
 def test_model_ZW_temporal(args, pred_eeg_data_test, test_subj):
     """The function tests the encoding model by correlating the predicted EEG 
