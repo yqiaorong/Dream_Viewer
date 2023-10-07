@@ -67,12 +67,12 @@ def train_scaler_pca(args):
             feats_all.append(feats)
     if args.layers == 'all':
         fmaps_train[layer_names[0]] = np.asarray(feats_all)
-        print('The old fmaps train shape',fmaps_train[layer_names[0]].shape)
+        print('The old training fmaps shape',fmaps_train[layer_names[0]].shape)
         fmaps_train_1[layer_names[0]] = []
     elif args.layers == 'single':
         for l, dnn_layer in enumerate(layer_names):
             fmaps_train[dnn_layer] = np.squeeze(np.asarray(feats[l]))
-            print('The old fmaps train shape',fmaps_train[dnn_layer].shape)
+            print('The old training fmaps shape',fmaps_train[dnn_layer].shape)
             fmaps_train_1[dnn_layer] = []
 
     ### Train the models ###
@@ -108,7 +108,7 @@ def train_scaler_pca(args):
         # Write in the data
         for i, features in enumerate(tqdm(fmaps_train_1[dnn_layer], desc='Lists to array')):
             fmaps_train_2[dnn_layer][i,:] = features
-        print('middle feature maps shape',fmaps_train_2[dnn_layer].shape)
+        print('The middle training fmaps shape',fmaps_train_2[dnn_layer].shape)
     del fmaps_train, fmaps_train_1
 
     # Apply PCA
@@ -119,7 +119,7 @@ def train_scaler_pca(args):
             degree=4, random_state=seed))
         pca[l].fit(fmaps_train_2[dnn_layer])
         fmaps_train_2[dnn_layer] = pca[l].transform(fmaps_train_2[dnn_layer])
-        print('final feature maps shape',fmaps_train_2[dnn_layer].shape)
+        print('The final training fmaps shape',fmaps_train_2[dnn_layer].shape)
 
     ### Save the downsampled feature maps ###
     save_dir = os.path.join(args.project_dir,'eeg_dataset','wake_data','THINGS_EEG2',

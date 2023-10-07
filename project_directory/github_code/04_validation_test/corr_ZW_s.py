@@ -14,7 +14,6 @@ import os
 import argparse
 import numpy as np
 from tqdm import tqdm
-import pingouin as pg
 from sklearn.linear_model import LinearRegression
 from corr_func import corr_s
 
@@ -24,11 +23,10 @@ from corr_func import corr_s
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--project_dir',
-					default='../project_directory', type=str)
+parser.add_argument('--project_dir',default='../project_directory', type=str)
 parser.add_argument('--dnn',default='alexnet',type=str)
 parser.add_argument('--test_dataset',default='Zhang_Wamsley',type=str)
-parser.add_argument('--num_dreams',default=90,type=int)
+parser.add_argument('--num_dreams',default=95,type=int)
 args = parser.parse_args()
 
 print(f'>>> Test the encoding model on {args.test_dataset} <<<')
@@ -46,6 +44,7 @@ ZW_EEG_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data',
 						  'Zhang_Wamsley', 'preprocessed_data')
 dreams_eegs = os.listdir(ZW_EEG_dir)
 dreams_eegs = [s[6:-4].replace('_', '') for s in dreams_eegs]
+print('The number of dreams: ', len(dreams_eegs))
 
 # Test dreams images list
 ZW_img_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
@@ -116,8 +115,8 @@ reg = LinearRegression().fit(dnn_fmaps_train['all_layers'],eeg_data_train)
 ### Load the test dream DNN feature maps ###
 # Load the test DNN feature maps directory
 dnn_test_dir = os.path.join(args.project_dir, 'eeg_dataset', 'dream_data', 
-                                args.test_dataset, 'dnn_feature_maps', 'pca_feature_maps', 
-                                args.dnn, 'pretrained-True', 'layers-all')
+                            args.test_dataset, 'dnn_feature_maps', 'pca_feature_maps', 
+                            args.dnn, 'pretrained-True', 'layers-all')
 # Load the test DNN feature maps (images, 3000)
 dnn_fmaps_test = np.load(os.path.join(dnn_test_dir,'pca_feature_maps_dreams.npy'
                         ), allow_pickle=True).item()
@@ -132,13 +131,13 @@ print('pred eeg data test shape: ', pred_eeg_data_test.shape)
 # Compute the correlation scores for one dream
 # =============================================================================	
 
-for dream_idx in range(args.num_dreams, int(args.num_dreams+5)):
-
+for dream_idx in range(args.num_dreams, 147):
+    print('The current dream: ', dreams_eegs[dreams_eegs_idx[dream_idx]])
     # The list of indices of dream images of target dream
     dreams_imgs_idx = [idx for idx, item in enumerate(dreams_imgs) 
                     if item == dreams_eegs[dreams_eegs_idx[dream_idx]]]
     print(f'The total number of images for dream {dreams_eegs[dreams_eegs_idx[dream_idx]]}: ',
-        len(dreams_imgs_idx))
+        len(dreams_imgs_idx), ' and the indice are: ', dreams_imgs_idx)
 
     # Set the cropped time points
     crop_t = 1000
@@ -173,31 +172,3 @@ for dream_idx in range(args.num_dreams, int(args.num_dreams+5)):
     np.save(os.path.join(save_dir, file_name), results)
 
     del corr, mean_corr, dreams_imgs_idx, results
-
-
-# # =============================================================================
-# # Compute the correlation mean scores for dreams
-# # =============================================================================	
-
-# # The array storing all correlation mean scores
-# mcorr = np.empty((len(dreams_eegs_idx), len(dreams_imgs)))
-# # Iterate over dreams
-# for e, eeg_idx in enumerate(tqdm(dreams_eegs_idx)):
-#     # Iterate over images
-#     for i, img in enumerate(dreams_imgs):
-#         _, mcorr[e,i] = corr_s(args, pred_eeg_data_test, eeg_idx, i, crop_t)    
-
-
-# # =============================================================================
-# # Plot the correlation scores matrix
-# # =============================================================================	
-
-# fig, ax = plt.subplots(1)
-# ax.set_title(f'2D Correlation scores')
-# im = ax.imshow(corr, cmap='viridis',
-#                extent=[0, len(dreams_imgs), 0, len(dreams_eegs_idx)], 
-#                origin='lower', aspect='auto')
-# cbar = plt.colorbar(im)
-# ax.set(xlabel = 'Images', ylabel = "Dreams")
-# fig.tight_layout()
-# plt.show()

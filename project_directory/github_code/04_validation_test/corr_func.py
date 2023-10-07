@@ -10,7 +10,7 @@ def corr_s(args, pred_eeg_data_test, eeg_idx, img_idx, crop_t, REM=False):
     pred_eeg_data_test: array with shape (images/dreams, channels x times)
         The predicted EEG data.
     eeg_idx : int
-        The dream index in dreams list.
+        The dream index in dreams preprocessed eeg list.
     img_idx : int
         The image index in dream images list.
     crop_t : int

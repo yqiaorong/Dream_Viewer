@@ -204,11 +204,11 @@ def save_prepr(args, whitened_data, ch_names, times, seed):
         Random seed.
 
     """
-
+    
+    import os
     import numpy as np
     from sklearn.utils import shuffle
-    import os
-
+    
     ### Save the data ###
     # Notation
     num_rep = whitened_data.shape[1]
