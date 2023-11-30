@@ -55,6 +55,7 @@ all = list(chain(*all))
 # Calculate the percentile
 mpval_95 = np.percentile(mean_all, 95)
 mpval_5 = np.percentile(mean_all, 5)
+print(f'The statistical mean correlation score: {np.mean(mean_all)} with C. I. {mpval_5}/{mpval_95}')
 # Plot the mean
 plt.figure()
 plt.hist(mean_all, bins=20, color='lightskyblue', label='Mean true r scores')
@@ -84,6 +85,7 @@ print('The percentage of mean true r scores above 0: ', mean_per)
 # Calculate the percentile
 pval_95 = np.percentile(all, 95)
 pval_5 = np.percentile(all, 5)
+print(f'The statistical correlation score: {np.mean(all)} with C. I. {pval_5}/{pval_95}')
 # Plot the mean
 plt.figure()
 plt.hist(all, bins=20, color='lightskyblue', label='true r scores')
